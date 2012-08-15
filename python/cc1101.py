@@ -1,13 +1,22 @@
 from gnuradio import gr
 from math import pi
 
-class demod(gr.hier_block):
+class cc1101_demod(gr.hier_block):
     def __init__(self, fg, sps = 8, symbol_rate = 38400, p_size = 13):
         """
         Hierarchical block for FSK demodulation.
     
         The input is the complex modulated signal at baseband
         and the output is a stream of bytes.
+        
+        @param fg: flow graph
+        @type fg: flow graph
+        @param sps: samples per symbol
+        @type sps: integer
+        @param symbol_rate: symbols per second
+        @type symbol_rate: float
+        @param p_size: packet size
+        @type p_size: integer
         """
         
         # Demodulate FM
@@ -26,10 +35,10 @@ class demod(gr.hier_block):
         
         # recover the clock
         omega = sps
-        gain_mu = 0.03
-        mu = 0.5
-        omega_relative_limit = 0.0002
-        freq_error = 0.0
+        gain_mu=0.03
+        mu=0.5
+        omega_relative_limit=0.0002
+        freq_error=0.0
         
         gain_omega = .25*gain_mu*gain_mu        # critically damped
         self.clock_recovery = gr.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu,
