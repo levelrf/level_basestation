@@ -1,7 +1,7 @@
 from gnuradio import gr
 from math import pi
 
-class cc1101_demod(gr.hier_block):
+class cc1k_demod(gr.hier_block2):
     def __init__(self, fg, sps = 8, symbol_rate = 38400, p_size = 13):
         """
         Hierarchical block for FSK demodulation.

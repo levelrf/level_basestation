@@ -1,13 +1,12 @@
 from math import pi
-import Numeric
 
-from gnuradio import gr, packet_utils
+from gnuradio import gr
 from gnuradio import level
 import gnuradio.gr.gr_threading as _threading
-import cc1101
+import cc1k
 import struct
 
-class cc1101_demod_pkts(gr.hier_block):
+class cc1k_demod_pkts(gr.hier_block2):
     """
     cc1101 demodulator that is a GNU Radio sink.
 
@@ -39,14 +38,14 @@ class cc1101_demod_pkts(gr.hier_block):
         self._access_code = access_code
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
-        self.cc1101_demod = cc1k.cc1k_demod(fg, *args, **kwargs)
-        self._packet_sink = level.level_packet_sink(access_code, self._rcvd_pktq)
+        self.c1k_demod = cc1k.cc1k_demod(fg, *args, **kwargs)
+        self._packet_sink = level.packet_sink(access_code, self._rcvd_pktq)
         
-        fg.connect(self.cc1101_demod, self._packet_sink)
-        #filesink = gr.file_sink (gr.sizeof_char, "/tmp/rx.log")
-        #fg.connect(self.cc1k_demod,filesink)
+        fg.connect(self.c1k_demod, self._packet_sink)
+        #filesink = gr.file_sink(gr.sizeof_char, "/tmp/rx.log")
+        #fg.connect(self.cc1k_demod, filesink)
       
-        gr.hier_block.__init__(self, fg, self.cc1k_demod, None)
+        gr.hier_block2.__init__(self, fg, self.cc1k_demod, None)
         self._watcher = _queue_watcher_thread(self._rcvd_pktq, callback)
 
     def carrier_sensed(self):
@@ -70,7 +69,8 @@ class _queue_watcher_thread(_threading.Thread):
         
     def run(self):
         while self.keep_running:
-            print "cc1101_level_pkt: waiting for packet"
+            print "cc1k_level_pkt: waiting for packet"
+            """
             msg = self.rcvd_pktq.delete_head()
             ok = 1
             payload = msg.to_string()
@@ -101,4 +101,5 @@ class _queue_watcher_thread(_threading.Thread):
             #ok = (crc == crcCheck)
             if self.callback:
                 self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
+            """
 

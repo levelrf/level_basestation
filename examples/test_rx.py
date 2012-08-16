@@ -10,7 +10,7 @@ from grc_gnuradio import wxgui as grc_wxgui
 from gnuradio.wxgui import fftsink2
 from gnuradio.gr import firdes
 from optparse import OptionParser
-#import ti_pkt_sink
+from gnuradio import level
 import wx
 
 class fsk_rx(grc_wxgui.top_block_gui):
@@ -29,7 +29,6 @@ class fsk_rx(grc_wxgui.top_block_gui):
         self.f_center = f_center = 434e6
         self.bandwidth = bandwidth = 1e6
         self.gain = gain = 0
-        self.trigger = trigger = False
 
         ##################################################
         # Blocks
@@ -78,12 +77,11 @@ class fsk_rx(grc_wxgui.top_block_gui):
 
         taps = firdes.low_pass_2(1, 1, 0.4, 0.1, 60)
 
-        #self.packet_receiver = ti_pkt_sink.ti_demod_pkts(self,
-        #                                                callback=self.rx_callback,
-        #                                                sps=self.samples_per_symbol,
-        #                                                symbol_rate=self.data_rate,
-        #                                                p_size=payload_size,
-        #                                                threshold=-1)
+        self.packet_receiver = level.cc1k_demod_pkts(self,
+                                                    callback=self.rx_callback,
+                                                    sps=self.samples_per_symbol,
+                                                    symbol_rate=self.data_rate,
+                                                    p_size=payload_size)
 
         #self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'rx_test.dat')
 
@@ -91,7 +89,7 @@ class fsk_rx(grc_wxgui.top_block_gui):
         # Connections
         ##################################################
         self.connect(self.uhd_src, self.wxgui_fftsink2)
-        #self.connect(self.uhd_src, self.packet_receiver)
+        self.connect(self.uhd_src, self.packet_receiver)
         #self.connect(self.packet_receiver, self.filesink)
 
 def main():

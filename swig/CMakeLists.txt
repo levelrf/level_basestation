@@ -1,42 +1,32 @@
 ########################################################################
-# Include swig generation macros
-########################################################################
-find_package(SWIG)
-find_package(PythonLibs)
-if(NOT SWIG_FOUND OR NOT PYTHONLIBS_FOUND)
-    return()
-endif()
-include(GrSwig)
-include(GrPython)
-
-########################################################################
 # Setup swig generation
 ########################################################################
-foreach(incdir ${GNURADIO_CORE_INCLUDE_DIRS})
-    list(APPEND GR_SWIG_INCLUDE_DIRS ${incdir}/swig)
-endforeach(incdir)
+include(GrPython)
+include(GrSwig)
 
-foreach(incdir ${GRUEL_INCLUDE_DIRS})
-    list(APPEND GR_SWIG_INCLUDE_DIRS ${incdir}/gruel/swig)
-endforeach(incdir)
+set(GR_SWIG_INCLUDE_DIRS
+    ${GR_LEVEL_INCLUDE_DIRS}
+    ${GNURADIO_CORE_SWIG_INCLUDE_DIRS}
+)
 
-set(GR_SWIG_LIBRARIES gnuradio-level)
-set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/level_doc.i)
+set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/level_swig_doc.i)
 set(GR_SWIG_DOC_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
-GR_SWIG_MAKE(level level.i)
+set(GR_SWIG_LIBRARIES gnuradio-level)
 
-########################################################################
-# Install the build swig module
-########################################################################
-GR_SWIG_INSTALL(TARGETS level DESTINATION ${GR_PYTHON_DIR}/level)
+GR_SWIG_MAKE(level_swig level_swig.i)
 
-########################################################################
-# Install swig .i files for development
-########################################################################
+GR_SWIG_INSTALL(
+    TARGETS level_swig
+    DESTINATION ${GR_PYTHON_DIR}/gnuradio/level
+    COMPONENT "level_python"
+)
+
 install(
     FILES
-    level.i
-    ${CMAKE_CURRENT_BINARY_DIR}/level_doc.i
-    DESTINATION ${GR_INCLUDE_DIR}/level/swig
+    level_swig.i
+    level_packet_sink.i
+    ${CMAKE_CURRENT_BINARY_DIR}/level_swig_doc.i
+    DESTINATION ${GR_INCLUDE_DIR}/gnuradio/swig
+    COMPONENT "level_swig"
 )

@@ -40,8 +40,8 @@ level_packet_sink::enter_have_sync()
 }
 
 level_packet_sink_sptr
-make_level_packet_sink (const std::vector<unsigned char>& sync_vector,
-			   		gr_msg_queue_sptr target_queue)
+level_make_packet_sink (const std::vector<unsigned char>& sync_vector,
+                        gr_msg_queue_sptr target_queue)
 {
   return level_packet_sink_sptr (new level_packet_sink (sync_vector, target_queue));
 }
@@ -65,7 +65,7 @@ level_packet_sink::level_packet_sink (const std::vector<unsigned char>& sync_vec
 level_packet_sink::~level_packet_sink () {}
 
 int
-ucla_sos_packet_sink::work (int noutput_items,
+level_packet_sink::work (int noutput_items,
           gr_vector_const_void_star &input_items,
           gr_vector_void_star &output_items)
 {

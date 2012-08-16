@@ -1,17 +1,27 @@
 ########################################################################
+# Setup the include and linker paths
+########################################################################
+include_directories(
+    ${GNURADIO_CORE_INCLUDE_DIRS}
+    ${GR_LEVEL_INCLUDE_DIRS}
+)
+
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+
+########################################################################
 # Setup library
 ########################################################################
-include(GrPlatform) #define LIB_SUFFIX
-
-add_library(gnuradio-level SHARED level_packet_sink.cc)
-target_link_libraries(gnuradio-level ${Boost_LIBRARIES} ${GRUEL_LIBRARIES} ${GNURADIO_CORE_LIBRARIES})
-set_target_properties(gnuradio-level PROPERTIES DEFINE_SYMBOL "gnuradio_level_EXPORTS")
-
-########################################################################
-# Install built library files
-########################################################################
-install(TARGETS gnuradio-level
-    LIBRARY DESTINATION lib${LIB_SUFFIX} # .so/.dylib file
-    ARCHIVE DESTINATION lib${LIB_SUFFIX} # .lib file
-    RUNTIME DESTINATION bin              # .dll file
+list(APPEND level_sources
+  level_packet_sink.cc
 )
+
+list(APPEND level_libs
+    gnuradio-core
+    ${Boost_LIBRARIES}
+)
+
+add_library(gnuradio-level SHARED ${level_sources})
+target_link_libraries(gnuradio-level ${level_libs})
+GR_LIBRARY_FOO(gnuradio-level RUNTIME_COMPONENT "level_runtime" DEVEL_COMPONENT "level_devel")

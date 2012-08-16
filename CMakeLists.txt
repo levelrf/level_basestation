@@ -18,7 +18,7 @@ GR_SET_GLOBAL(GR_LEVEL_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-SET(GR_PKG_DIGITAL_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/level)
+SET(GR_PKG_LEVEL_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/level)
 
 ########################################################################
 # Begin conditional configuration

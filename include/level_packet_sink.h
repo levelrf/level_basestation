@@ -1,5 +1,5 @@
-#ifndef LEVEL_PACKET_SYNC
-#define LEVEL_PACKET_SYNC
+#ifndef INCLUDED_LEVEL_PACKET_SINK
+#define INCLUDED_LEVEL_PACKET_SINK
 
 #include <gr_sync_block.h>
 #include <gr_msg_queue.h>
@@ -8,13 +8,13 @@ class level_packet_sink;
 
 typedef boost::shared_ptr<level_packet_sink> level_packet_sink_sptr;
 
-level_packet_sink_sptr make_level_packet_sink (const std::vector<unsigned char>& sync_vector,
+level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& sync_vector,
 			   gr_msg_queue_sptr target_queue);
 
 class level_packet_sink : public gr_sync_block
 {
 private:
- 	friend level_packet_sink_sptr make_level_packet_sink (const std::vector<unsigned char>& sync_vector,
+ 	friend level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& sync_vector,
 			   gr_msg_queue_sptr target_queue);	
  	
  	level_packet_sink();   // private constructor	
@@ -45,8 +45,7 @@ private:
   
 protected:
  	level_packet_sink(const std::vector<unsigned char>& sync_vector, 
-		       gr_msg_queue_sptr target_queue,
-		       int threshold);
+		       gr_msg_queue_sptr target_queue);
  	
  	void enter_search();
  	void enter_have_sync();
@@ -66,4 +65,4 @@ protected:
  	}
 };
 
-#endif /* level_PACKET_SYNC */
+#endif /* INCLUDED_LEVEL_PACKET_SINK */
