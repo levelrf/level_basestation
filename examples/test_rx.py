@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #!/usr/bin/env python
 
 from gnuradio import eng_notation
@@ -15,7 +16,7 @@ import wx
 
 class fsk_rx(grc_wxgui.top_block_gui):
     def __init__(self):
-        grc_wxgui.top_block_gui.__init__(self, title="GMSK Burst Detector")
+        grc_wxgui.top_block_gui.__init__(self, title="CC1101 Burst Detector")
         _icon_path = "/usr/share/icons/hicolor/32x32/apps/gnuradio-grc.png"
         self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
 
@@ -77,8 +78,7 @@ class fsk_rx(grc_wxgui.top_block_gui):
 
         taps = firdes.low_pass_2(1, 1, 0.4, 0.1, 60)
 
-        self.packet_receiver = level.cc1k_demod_pkts(self,
-                                                    callback=self.rx_callback,
+        self.packet_receiver = level.cc1k_demod_pkts(callback=rx_callback(),
                                                     sps=self.samples_per_symbol,
                                                     symbol_rate=self.data_rate,
                                                     p_size=payload_size)

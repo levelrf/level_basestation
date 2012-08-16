@@ -1,8 +1,9 @@
 from gnuradio import gr
+from gnuradio import digital
 from math import pi
 
-class cc1k_demod(gr.hier_block2):
-    def __init__(self, fg, sps = 8, symbol_rate = 38400, p_size = 13):
+class fsk_demod(gr.hier_block2):
+    def __init__(self, sps = 8, symbol_rate = 38400, p_size = 13):
         """
         Hierarchical block for FSK demodulation.
     
@@ -18,6 +19,10 @@ class cc1k_demod(gr.hier_block2):
         @param p_size: packet size
         @type p_size: integer
         """
+        # Initialize base class
+        gr.hier_block2.__init__(self, "fsk_demod",
+                gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
+                gr.io_signature(1, 1, gr.sizeof_float)) # Output signature
         
         # Demodulate FM
         sensitivity = (pi / 2) / sps
@@ -30,8 +35,9 @@ class cc1k_demod(gr.hier_block2):
         self.freq_offset = gr.single_pole_iir_filter_ff(alpha)
         self.sub = gr.sub_ff()
         
-        fg.connect(self.fmdemod, (self.sub, 0))
-        fg.connect(self.fmdemod, self.freq_offset, (self.sub, 1))
+        self.connect(self, self.fmdemod)
+        self.connect(self.fmdemod, (self.sub, 0))
+        self.connect(self.fmdemod, self.freq_offset, (self.sub, 1))
         
         # recover the clock
         omega = sps
@@ -41,14 +47,8 @@ class cc1k_demod(gr.hier_block2):
         freq_error=0.0
         
         gain_omega = .25*gain_mu*gain_mu        # critically damped
-        self.clock_recovery = gr.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu,
+        self.clock_recovery = digital.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu,
                                                       omega_relative_limit)
         
         # Connect
-        fg.connect(self.sub, self.clock_recovery)
-        
-        #filesink = gr.file_sink(gr.sizeof_float, 'rx_fsk_test.dat')
-        #fg.connect(self.clock_recovery, filesink)
-        
-        # Initialize base class
-        gr.hier_block.__init__(self, fg, self.fmdemod, self.clock_recovery)
+        self.connect(self.sub, self.clock_recovery, self)

@@ -13,7 +13,7 @@
 #include <cstring>
 #include <gr_count_bits.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 static const int DEFAULT_THRESHOLD = 0;  // detect access code with up to DEFAULT_THRESHOLD bits wrong
 
@@ -69,5 +69,11 @@ level_packet_sink::work (int noutput_items,
           gr_vector_const_void_star &input_items,
           gr_vector_void_star &output_items)
 {
+  float *inbuf = (float *) input_items[0];
+  int count=0;
+  
+  if (VERBOSE)
+    fprintf(stderr, ">>> Entering state machine\n"), fflush(stderr);
+
   return 0;
 }

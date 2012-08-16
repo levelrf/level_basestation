@@ -1,9 +1,9 @@
 from math import pi
 
 from gnuradio import gr
-from gnuradio import level
+from level_swig import *
 import gnuradio.gr.gr_threading as _threading
-import cc1k
+from fsk_demod import fsk_demod
 import struct
 
 class cc1k_demod_pkts(gr.hier_block2):
@@ -14,38 +14,37 @@ class cc1k_demod_pkts(gr.hier_block2):
     app via the callback.
     """
 
-    def __init__(self, fg, access_code=None, callback=None, *args, **kwargs):
+    def __init__(self, preamble=None, callback=None, *args, **kwargs):
         """
     	Hierarchical block for binary FSK demodulation.
 
     	The input is the complex modulated signal at baseband.
             Demodulated packets are sent to the handler.
 
-    	@param fg: flow graph
-    	@type fg: flow graph
-            @param access_code: 30-bit sync code
-            @type access_code: string of length 8
+            @param preamble: 30-bit preamble
+            @type preamble: string
             @param callback:  function of two args: ok, payload
             @type callback: ok: bool; payload: string
-            @param threshold: detect access_code with up to threshold bits wrong (-1 -> use default)
-            @type threshold: int
 
             See cc1101_demod for remaining parameters.
     	"""
 
-        if access_code is None:
-            access_code = 0b101010101010101010101010101010
-        self._access_code = access_code
+        gr.hier_block2.__init__(self, "demod_pkts",
+            gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
+            gr.io_signature(0, 0, 0))                    # Output signature
+
+        if preamble is None:
+            preamble = chr(0b10101010) + chr(0b10101010) + chr(0b10101010) + chr(0b101010)
+        self._preamble = preamble
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
-        self.c1k_demod = cc1k.cc1k_demod(fg, *args, **kwargs)
-        self._packet_sink = level.packet_sink(access_code, self._rcvd_pktq)
+        self.demod = fsk_demod(*args, **kwargs)
+        self._packet_sink = packet_sink(map(ord, preamble), self._rcvd_pktq)
         
-        fg.connect(self.c1k_demod, self._packet_sink)
-        #filesink = gr.file_sink(gr.sizeof_char, "/tmp/rx.log")
-        #fg.connect(self.cc1k_demod, filesink)
+        self.connect(self, self.demod, self._packet_sink)
+        #filesink = gr.file_sink(gr.sizeof_gr_complex, "/tmp/rx.log")
+        #fg.connect(self.demod, filesink)
       
-        gr.hier_block2.__init__(self, fg, self.cc1k_demod, None)
         self._watcher = _queue_watcher_thread(self._rcvd_pktq, callback)
 
     def carrier_sensed(self):
@@ -70,7 +69,6 @@ class _queue_watcher_thread(_threading.Thread):
     def run(self):
         while self.keep_running:
             print "cc1k_level_pkt: waiting for packet"
-            """
             msg = self.rcvd_pktq.delete_head()
             ok = 1
             payload = msg.to_string()
@@ -101,5 +99,3 @@ class _queue_watcher_thread(_threading.Thread):
             #ok = (crc == crcCheck)
             if self.callback:
                 self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
-            """
-
