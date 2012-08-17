@@ -1,37 +1,42 @@
 #ifndef INCLUDED_LEVEL_PACKET_SINK
 #define INCLUDED_LEVEL_PACKET_SINK
 
+#include <stdint.h>
 #include <gr_sync_block.h>
 #include <gr_msg_queue.h>
+
+#define FMT_BUF_SIZE (CHAR_BIT*sizeof(uintmax_t)+1)
 
 class level_packet_sink;
 
 typedef boost::shared_ptr<level_packet_sink> level_packet_sink_sptr;
 
-level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& sync_vector,
+level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& preamble,
 			   gr_msg_queue_sptr target_queue);
 
 class level_packet_sink : public gr_sync_block
 {
 private:
- 	friend level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& sync_vector,
+ 	friend level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& preamble,
 			   gr_msg_queue_sptr target_queue);	
  	
  	level_packet_sink();   // private constructor	
  	
- 	enum state_t {STATE_SYNC_SEARCH, STATE_HAVE_SYNC};	
+ 	enum state_t {STATE_PREAMBLE_SEARCH, STATE_SYNC_SEARCH, STATE_DECODE_PACKET};	
  	
  	static const int MSG_LEN_POS = 8+1;        			  	// 8 byte sos header, 1 byte AM type
  	static const int MAX_PKT_LEN = 128 - MSG_LEN_POS - 1;	// remove header and CRC	
  	
  	gr_msg_queue_sptr  d_target_queue;					  	// where to send the packet when received
- 	unsigned long long d_sync_vector;						// access code to locate start of packet
- 	unsigned int	   d_threshold;						    // how many bits may be wrong in sync vector
+ 	uint32_t		   d_preamble;							// 32 bit preamble to locate start of packet
+ 	uint32_t		   d_threshold;						    // how many bits may be wrong in preamble
+ 	uint32_t		   d_sync;								// sync word
  	unsigned char      d_manchester;      				  	// do we use manchester encoding or not
 				  	
  	state_t            d_state;				  	
 				  	
- 	unsigned long long d_shift_reg;						  	// used to look for sync_vector
+ 	uint32_t		   d_preamble_reg;						// used to look for preamble
+ 	uint32_t		   d_sync_reg;						  	// used to look for preamble
 				  	
  	unsigned int       d_header;							// header bits
  	int		     	   d_headerbitlen_cnt;				  	// how many so far	
@@ -44,11 +49,22 @@ private:
  	int		     	   d_payload_cnt;						// how many bytes in payload
   
 protected:
- 	level_packet_sink(const std::vector<unsigned char>& sync_vector, 
+ 	level_packet_sink(const std::vector<unsigned char>& preamble, 
 		       gr_msg_queue_sptr target_queue);
  	
  	void enter_search();
- 	void enter_have_sync();
+ 	void enter_sync_search();
+
+ 	int slice(float x) { return x > 0 ? 1 : 0; }
+
+ 	char *binary_fmt(uintmax_t x, char buf[FMT_BUF_SIZE])
+ 	{
+	    char *s = buf + FMT_BUF_SIZE;
+	    *--s = 0;
+	    if (!x) *--s = '0';
+	    for(; x; x/=2) *--s = '0' + x%2;
+	    return s;
+	}
 
  public:
  	~level_packet_sink ();  // public destructor	
@@ -61,7 +77,7 @@ protected:
  	// return true if we detect carrier
  	bool carrier_sensed() const
  	{
- 	  return d_state != STATE_SYNC_SEARCH;
+ 	  return d_state != STATE_PREAMBLE_SEARCH;
  	}
 };
 
