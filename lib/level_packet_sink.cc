@@ -16,6 +16,7 @@
 
 #define VERBOSE 1
 
+// just for debug printing
 char tmp[FMT_BUF_SIZE];
 
 inline void
@@ -36,6 +37,18 @@ level_packet_sink::enter_sync_search()
 
   d_state = STATE_SYNC_SEARCH;
   d_sync_reg = 0;
+  d_sync_len_index = 0;
+}
+
+inline void
+level_packet_sink::enter_decode_packet()
+{
+  if (VERBOSE)
+    fprintf(stderr, "@ enter_decode_packet\n");
+
+  d_state = STATE_DECODE_PACKET;
+  d_packet_byte = 0;
+  d_packet_length = 2; // TODO: extract packet length
 }
 
 level_packet_sink_sptr
@@ -54,7 +67,7 @@ level_packet_sink::level_packet_sink (const std::vector<unsigned char>& preamble
 {
   // store preamble vector in int32_t
   d_preamble = 0;
-  for(int i=0;i<4;i++){
+  for(int i = 0; i < 4; i++){
     d_preamble <<= 8;
     d_preamble |= preamble[i];
   }
@@ -62,7 +75,7 @@ level_packet_sink::level_packet_sink (const std::vector<unsigned char>& preamble
   if ( VERBOSE )
     fprintf(stderr, "preamble: %s\n", binary_fmt(d_preamble, tmp)), fflush(stderr);
 
-  d_sync = 0x0000;
+  d_sync = 0xD391;
 }
 
 level_packet_sink::~level_packet_sink () {}
@@ -73,31 +86,27 @@ level_packet_sink::work (int noutput_items,
           gr_vector_void_star &output_items)
 {
   float *inbuf = (float *) input_items[0];
-  int count=0;
-  d_threshold = 1;
+  int count = 0;
+  d_threshold = 3;
   
-  if (VERBOSE)
-    fprintf(stderr, ">>> Entering state machine\n"), fflush(stderr);
+  //if (VERBOSE)
+  //  fprintf(stderr, ">>> Entering state machine\n"), fflush(stderr);
 
-  while (count<noutput_items) {
+  while (count < noutput_items) {
     switch(d_state) {
       
-      case STATE_PREAMBLE_SEARCH:    // Look for sync vector
+      case STATE_PREAMBLE_SEARCH:    // Look for preamble
         
-        if (VERBOSE)
-          fprintf(stderr,"PREAMBLE Search, noutput=%d preamble=%s\n", noutput_items, 
-                  binary_fmt(d_preamble, tmp)), fflush(stderr);
+        //if (VERBOSE)
+        //  fprintf(stderr,"PREAMBLE Search, noutput=%d preamble=%s\n", noutput_items, 
+        //          binary_fmt(d_preamble, tmp)), fflush(stderr);
 
         while (count < noutput_items) {
           if(slice(inbuf[count++]))
             d_preamble_reg = (d_preamble_reg << 1) | 1;  // Shift bits one at a time into preamble
           else
             d_preamble_reg = d_preamble_reg << 1;
-          
-          //if (VERBOSE)
-          //  fprintf(stderr,"d_shift=%u preamble=%u\n", d_preamble_reg, d_preamble), fflush(stderr); 
 
-          // Compute popcnt of putative sync vector
           if(gr_count_bits64(d_preamble_reg ^ d_preamble) <= d_threshold) {
             if (VERBOSE)
               fprintf(stderr,"FOUND PREAMBLE, detected=%s preamble=%s\n", binary_fmt(d_preamble_reg, tmp), 
@@ -110,27 +119,64 @@ level_packet_sink::work (int noutput_items,
 
       case STATE_SYNC_SEARCH:
         if (VERBOSE)
-          fprintf(stderr,"SYNC Search, noutput=%d sync=%u\n", noutput_items, d_preamble), fflush(stderr);
+          fprintf(stderr,"SYNC Search, noutput=%d sync=%s\n", noutput_items, binary_fmt(d_sync, tmp)), fflush(stderr);
 
         while (count < noutput_items) {
           if(slice(inbuf[count++]))
             d_sync_reg = (d_sync_reg << 1) | 1;  // Shift bits one at a time into sync
           else
             d_sync_reg = d_sync_reg << 1;
+          d_sync_len_index++;
 
-          // Compute popcnt of putative sync vector
-          if(gr_count_bits64(d_sync_reg ^ d_preamble) <= d_threshold) {
-            // Found it, set up for header decode
+          if (VERBOSE)
+            fprintf(stderr,"SYNC so far: %s\n", binary_fmt(d_sync_reg, tmp)), fflush(stderr);
+
+          // Compute incorrect bits of alleged sync vector
+          if(gr_count_bits64(d_sync_reg ^ d_sync) <= d_threshold) {
+            // Found it, set up for packet decode
             if (VERBOSE)
               fprintf(stderr,"FOUND SYNC, detected=%s sync=%s\n", binary_fmt(d_sync_reg, tmp), 
                   binary_fmt(d_sync, tmp)), fflush(stderr);
             enter_decode_packet();
+          }else if(d_sync_len_index >= 16){
+            // wrong sync word after preamble
+            if (VERBOSE)
+              fprintf(stderr,"WRONG SYNC, incorrect=%d\n", gr_count_bits64(d_sync_reg ^ d_sync)), fflush(stderr);
+            enter_search();
+          }
+        }
+        break;
+
+      case STATE_DECODE_PACKET:
+        if(VERBOSE)
+          fprintf(stderr,"Decoding Packet, length=%d\n", d_packet_length), fflush(stderr);
+
+        while (count < noutput_items) {   // shift bits into bytes of packet one at a time
+          if(slice(inbuf[count++]))
+            d_packet_byte = (d_packet_byte << 1) | 1;
+          else
+            d_packet_byte = d_packet_byte << 1;
+        }
+
+        if (d_packet_byte_index++ == 7) {     // byte is full so move to next byte
+          d_packet[d_packetlen_cnt++] = d_packet_byte;
+          d_payload_cnt++;
+          d_packet_byte_index = 0;
+
+          if (d_payload_cnt >= d_packet_length + 2){  // packet is filled
+            // build a message
+            gr_message_sptr msg = gr_make_message(0, 0, 0, d_packetlen_cnt);        
+            memcpy(msg->msg(), d_packet, d_packetlen_cnt);
+
+            d_target_queue->insert_tail(msg);   // send it
+            msg.reset();                        // free it up
+            if(VERBOSE)
+              fprintf(stderr, "Adding message of size %d to queue\n", d_packetlen_cnt);
+            enter_search();
             break;
           }
         }
-
-        break;
-    }
+      }
   }
 
   return noutput_items;

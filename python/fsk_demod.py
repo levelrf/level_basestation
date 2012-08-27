@@ -9,15 +9,6 @@ class fsk_demod(gr.hier_block2):
     
         The input is the complex modulated signal at baseband
         and the output is a stream of bytes.
-        
-        @param fg: flow graph
-        @type fg: flow graph
-        @param sps: samples per symbol
-        @type sps: integer
-        @param symbol_rate: symbols per second
-        @type symbol_rate: float
-        @param p_size: packet size
-        @type p_size: integer
         """
         # Initialize base class
         gr.hier_block2.__init__(self, "fsk_demod",

@@ -20,4 +20,7 @@ Sink listens for a preamble of length 30 bits:
 10101010...
 If found, look for 32 bit sync word:
 1101...
-If valid, extract payload (ignore other fields for now)
+If valid, look at length and store rest of packet in buffer
+Then compute FCS code to check for bit errors
+If valid packet, segment buffer in to fields
+Pass extracted payload to higher level process

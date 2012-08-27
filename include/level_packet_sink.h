@@ -27,26 +27,23 @@ private:
  	static const int MSG_LEN_POS = 8+1;        			  	// 8 byte sos header, 1 byte AM type
  	static const int MAX_PKT_LEN = 128 - MSG_LEN_POS - 1;	// remove header and CRC	
  	
- 	gr_msg_queue_sptr  d_target_queue;					  	// where to send the packet when received
- 	uint32_t		   d_preamble;							// 32 bit preamble to locate start of packet
- 	uint32_t		   d_threshold;						    // how many bits may be wrong in preamble
- 	uint32_t		   d_sync;								// sync word
- 	unsigned char      d_manchester;      				  	// do we use manchester encoding or not
-				  	
- 	state_t            d_state;				  	
-				  	
- 	uint32_t		   d_preamble_reg;						// used to look for preamble
- 	uint32_t		   d_sync_reg;						  	// used to look for preamble
-				  	
- 	unsigned int       d_header;							// header bits
- 	int		     	   d_headerbitlen_cnt;				  	// how many so far	
- 	unsigned char      d_packet[MAX_PKT_LEN];				// assembled payload
- 	unsigned char	   d_packet_byte;						// byte being assembled
- 	unsigned char      d_packet_byte_manchester;  		  	// byte which is needed for manchester encoding
- 	int		     	   d_packet_byte_index;				  	// which bit of d_packet_byte we're working on
- 	int 		       d_packetlen;						    // length of packet
- 	int		     	   d_packetlen_cnt;					  	// how many so far
- 	int		     	   d_payload_cnt;						// how many bytes in payload
+ 	gr_msg_queue_sptr    d_target_queue;					// where to send the packet when received
+ 	uint32_t		     d_preamble;						// 32 bit preamble to locate start of packet
+ 	uint32_t		     d_threshold;						// how many bits may be wrong in preamble
+ 	uint16_t		     d_sync;							// sync word
+				  	  
+ 	state_t              d_state;				  	
+				  	  
+ 	uint32_t		     d_preamble_reg;					// used to look for preamble
+ 	uint16_t		     d_sync_reg;						// used to look for sync word
+ 	uint8_t				 d_sync_len_index;					// track length of sync word
+  
+ 	uint8_t				 d_packet[MAX_PKT_LEN];				// assembled payload
+ 	uint8_t			     d_packet_byte;						// byte being assembled
+ 	uint32_t     	     d_packet_byte_index;				// which bit of d_packet_byte we're working on
+ 	uint32_t	         d_packet_length;					// length of packet
+ 	uint32_t     	     d_packetlen_cnt;					// how many so far
+ 	uint32_t     	     d_payload_cnt;						// how many bytes in payload
   
 protected:
  	level_packet_sink(const std::vector<unsigned char>& preamble, 
@@ -54,9 +51,11 @@ protected:
  	
  	void enter_search();
  	void enter_sync_search();
+ 	void enter_decode_packet();
 
  	int slice(float x) { return x > 0 ? 1 : 0; }
 
+ 	// just for debug printing
  	char *binary_fmt(uintmax_t x, char buf[FMT_BUF_SIZE])
  	{
 	    char *s = buf + FMT_BUF_SIZE;

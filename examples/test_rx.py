@@ -27,7 +27,7 @@ class fsk_rx(grc_wxgui.top_block_gui):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 500e3
-        self.f_center = f_center = 434e6
+        self.f_center = f_center = 867e6
         self.bandwidth = bandwidth = 1e6
         self.gain = gain = 0
 

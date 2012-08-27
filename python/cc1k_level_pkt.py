@@ -34,7 +34,7 @@ class cc1k_demod_pkts(gr.hier_block2):
             gr.io_signature(0, 0, 0))                    # Output signature
 
         if preamble is None:
-            preamble = chr(0b10101010) + chr(0b10101010) + chr(0b10101010) + chr(0b101010)
+            preamble = chr(0b10101010) + chr(0b10101010) + chr(0b10101010) + chr(0b10101000)
         self._preamble = preamble
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
@@ -63,8 +63,8 @@ class _queue_watcher_thread(_threading.Thread):
         self.keep_running = True
         self.start()
 
-    #def stop(self):
-    #    self.keep_running = False
+    def stop(self):
+        self.keep_running = False
         
     def run(self):
         while self.keep_running:
@@ -73,16 +73,17 @@ class _queue_watcher_thread(_threading.Thread):
             ok = 1
             payload = msg.to_string()
             
-            #print "received packet "
-            am_group = ord(payload[0])
-            module_src = ord(payload[1])
-            module_dst = ord(payload[2])
-            dst_addr = ord(payload[4])*256 + ord(payload[3])
-            src_addr = ord(payload[6])*256 + ord(payload[5])
-            msg_type = ord(payload[7])
-            msg_len = ord(payload[8])
-            msg_payload = payload[9:9+msg_len]
-            crc = ord(payload[-2]) + ord(payload[-1])*256
+            print "received packet "
+            print payload
+            #am_group = ord(payload[0])
+            #module_src = ord(payload[1])
+            #module_dst = ord(payload[2])
+            #dst_addr = ord(payload[4])*256 + ord(payload[3])
+            #src_addr = ord(payload[6])*256 + ord(payload[5])
+            #msg_type = ord(payload[7])
+            #msg_len = ord(payload[8])
+            #msg_payload = payload[9:9+msg_len]
+            #crc = ord(payload[-2]) + ord(payload[-1])*256
 
             #crcClass = crc8.crc8()
             #crcCheck = crcClass.crc(payload[1:9+msg_len])
@@ -98,4 +99,5 @@ class _queue_watcher_thread(_threading.Thread):
             #print
             #ok = (crc == crcCheck)
             if self.callback:
-                self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
+                pass
+                #self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
