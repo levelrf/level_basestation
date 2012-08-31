@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: gnuradio-level
+Description: GNU Radio blocks for Level RF
+Requires: gnuradio-core
+Version: 3.6.2git
+Libs: -L${libdir} -lgnuradio-level
+Cflags: -I${includedir}

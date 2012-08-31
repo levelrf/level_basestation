@@ -1,96 +1,243 @@
-########################################################################
-# Setup dependencies
-########################################################################
-include(GrBoost)
+# Copyright 2010-2011 Free Software Foundation, Inc.
+#
+# This file is part of GNU Radio
+#
+# GNU Radio is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3, or (at your option)
+# any later version.
+#
+# GNU Radio is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GNU Radio; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 51 Franklin Street,
+# Boston, MA 02110-1301, USA.
 
 ########################################################################
-# Register component
-########################################################################
-include(GrComponent)
-
-GR_REGISTER_COMPONENT("level" ENABLE_GR_LEVEL
-    Boost_FOUND
-    ENABLE_GR_CORE
-)
-
-GR_SET_GLOBAL(GR_LEVEL_INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-SET(GR_PKG_LEVEL_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/level)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message(FATAL_ERROR "Prevented in-tree build. This is bad practice.")
+endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 
 ########################################################################
-# Begin conditional configuration
+# Project setup
 ########################################################################
-if(ENABLE_GR_LEVEL)
+cmake_minimum_required(VERSION 2.6)
+project(gnuradio CXX C)
+enable_testing()
 
-########################################################################
-# Setup CPack components
-########################################################################
-include(GrPackage)
-CPACK_SET(CPACK_COMPONENT_GROUP_DIGITAL_DESCRIPTION "GNU Radio Level Blocks")
+#select the release build type by default to get optimization flags
+if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE "Release")
+   message(STATUS "Build type not specified: defaulting to release.")
+endif(NOT CMAKE_BUILD_TYPE)
+set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "")
 
-CPACK_COMPONENT("level_runtime"
-    GROUP        "Level"
-    DISPLAY_NAME "Runtime"
-    DESCRIPTION  "Dynamic link libraries"
-    DEPENDS      "core_runtime"
-)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
-CPACK_COMPONENT("level_devel"
-    GROUP        "Level"
-    DISPLAY_NAME "Development"
-    DESCRIPTION  "C++ headers, package config, import libraries"
-    DEPENDS      "core_devel"
-)
+# Set the version information here
+set(VERSION_INFO_MAJOR_VERSION 3)
+set(VERSION_INFO_API_COMPAT    6)
+set(VERSION_INFO_MINOR_VERSION 2)
+set(VERSION_INFO_MAINT_VERSION git)
+include(GrVersion) #setup version info
 
-CPACK_COMPONENT("level_python"
-    GROUP        "Level"
-    DISPLAY_NAME "Python"
-    DESCRIPTION  "Python modules for runtime"
-    DEPENDS      "core_python;level_runtime"
-)
-
-CPACK_COMPONENT("level_examples"
-    GROUP        "Level"
-    DISPLAY_NAME "Examples"
-    DESCRIPTION  "Example programs"
-    DEPENDS      "level_runtime"
-)
-
-CPACK_COMPONENT("level_swig"
-    GROUP        "Level"
-    DISPLAY_NAME "SWIG"
-    DESCRIPTION  "SWIG development .i files"
-    DEPENDS      "core_swig;level_python;level_devel"
-)
+# Append -O2 optimization flag for Debug builds
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O2")
 
 ########################################################################
-# Add subdirectories
+# Import executables from a native build (for cross compiling)
+# http://www.vtk.org/Wiki/CMake_Cross_Compiling#Using_executables_in_the_build_created_during_the_build
 ########################################################################
-add_subdirectory(include)
-add_subdirectory(lib)
-add_subdirectory(doc)
-if(ENABLE_PYTHON)
-    add_subdirectory(swig)
-    add_subdirectory(python)
-    add_subdirectory(grc)
-    add_subdirectory(examples)
-endif(ENABLE_PYTHON)
+if(IMPORT_EXECUTABLES)
+    include(${IMPORT_EXECUTABLES})
+endif(IMPORT_EXECUTABLES)
+
+#set file that the native build will fill with exports
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake)
+file(WRITE ${EXPORT_FILE}) #blank the file (subdirs will append)
 
 ########################################################################
-# Create Pkg Config File
+# Compiler specific setup
+########################################################################
+include(GrMiscUtils) #compiler flag check
+
+if(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
+    #http://gcc.gnu.org/wiki/Visibility
+    #GR_ADD_CXX_COMPILER_FLAG_IF_AVAILABLE(-fvisibility=hidden HAVE_VISIBILITY_HIDDEN)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+    GR_ADD_CXX_COMPILER_FLAG_IF_AVAILABLE(-Wsign-compare HAVE_WARN_SIGN_COMPARE)
+    GR_ADD_CXX_COMPILER_FLAG_IF_AVAILABLE(-Wall HAVE_WARN_ALL)
+    GR_ADD_CXX_COMPILER_FLAG_IF_AVAILABLE(-Wno-uninitialized HAVE_WARN_NO_UNINITIALIZED)
+endif(CMAKE_COMPILER_IS_GNUCXX)
+
+if(MSVC)
+    include_directories(${CMAKE_SOURCE_DIR}/cmake/msvc) #missing headers
+    add_definitions(-D_WIN32_WINNT=0x0501) #minimum version required is windows xp
+    add_definitions(-DNOMINMAX) #disables stupidity and enables std::min and std::max
+    add_definitions( #stop all kinds of compatibility warnings
+        -D_SCL_SECURE_NO_WARNINGS
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_SECURE_NO_DEPRECATE
+        -D_CRT_NONSTDC_NO_DEPRECATE
+    )
+    add_definitions(-DHAVE_CONFIG_H)
+    add_definitions(/MP) #build with multiple processors
+endif(MSVC)
+
+########################################################################
+# Install directories
+########################################################################
+include(GrPlatform) #define LIB_SUFFIX
+set(GR_RUNTIME_DIR      bin)
+set(GR_LIBRARY_DIR      lib${LIB_SUFFIX})
+set(GR_INCLUDE_DIR      include)
+set(GR_DATA_DIR         share)
+set(GR_PKG_DATA_DIR     ${GR_DATA_DIR}/${CMAKE_PROJECT_NAME})
+set(GR_DOC_DIR          ${GR_DATA_DIR}/doc)
+set(GR_PKG_DOC_DIR      ${GR_DOC_DIR}/${CMAKE_PROJECT_NAME}-${DOCVER})
+set(GR_CONF_DIR         etc)
+set(GR_PKG_CONF_DIR     ${GR_CONF_DIR}/${CMAKE_PROJECT_NAME}/conf.d)
+set(GR_LIBEXEC_DIR      libexec)
+set(GR_PKG_LIBEXEC_DIR  ${GR_LIBEXEC_DIR}/${CMAKE_PROJECT_NAME})
+set(GRC_BLOCKS_DIR      ${GR_PKG_DATA_DIR}/grc/blocks)
+
+########################################################################
+# Variables replaced when configuring the package config files
+########################################################################
+file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}"           prefix)
+file(TO_NATIVE_PATH "\${prefix}"                        exec_prefix)
+file(TO_NATIVE_PATH "\${exec_prefix}/${GR_LIBRARY_DIR}" libdir)
+file(TO_NATIVE_PATH "\${prefix}/${GR_INCLUDE_DIR}"      includedir)
+
+########################################################################
+# Create uninstall target
 ########################################################################
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-level.pc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-level.pc
+    ${CMAKE_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
 @ONLY)
 
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-level.pc
-    DESTINATION ${GR_LIBRARY_DIR}/pkgconfig
-    COMPONENT "level_devel"
+add_custom_target(uninstall
+    ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
 )
 
-endif(ENABLE_GR_LEVEL)
+########################################################################
+# Enable python component
+########################################################################
+find_package(PythonLibs)
+find_package(SWIG)
+
+if(SWIG_FOUND)
+    message(STATUS "Minimum SWIG version required is 1.3.31")
+    set(SWIG_VERSION_CHECK FALSE)
+    if("${SWIG_VERSION}" VERSION_GREATER "1.3.30")
+        set(SWIG_VERSION_CHECK TRUE)
+    endif()
+endif(SWIG_FOUND)
+
+include(GrComponent)
+GR_REGISTER_COMPONENT("python-support" ENABLE_PYTHON
+    PYTHONLIBS_FOUND
+    SWIG_FOUND
+    SWIG_VERSION_CHECK
+)
+
+find_package(CppUnit)
+GR_REGISTER_COMPONENT("testing-support" ENABLE_TESTING
+    CPPUNIT_FOUND
+)
+
+########################################################################
+# Add optional dlls specified in DLL_PATHS
+########################################################################
+foreach(path ${DLL_PATHS})
+    file(GLOB _dlls "${path}/*.dll")
+    list(APPEND ALL_DLL_FILES ${_dlls})
+endforeach(path)
+if(DEFINED ALL_DLL_FILES)
+    include(GrPackage)
+    CPACK_COMPONENT("extra_dlls"
+        DISPLAY_NAME "Extra DLLs"
+        DESCRIPTION  "Extra DLLs for runtime dependency requirements"
+    )
+    message(STATUS "")
+    message(STATUS "Including the following dlls into the install:")
+    foreach(_dll ${ALL_DLL_FILES})
+        message(STATUS "  ${_dll}")
+    endforeach(_dll)
+    install(FILES ${ALL_DLL_FILES} DESTINATION ${GR_RUNTIME_DIR} COMPONENT "extra_dlls")
+endif()
+
+########################################################################
+# Setup volk as a subproject
+########################################################################
+include(GrComponent)
+GR_REGISTER_COMPONENT("volk" ENABLE_VOLK)
+
+set(VOLK_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/volk/include
+    ${CMAKE_CURRENT_BINARY_DIR}/volk/include
+)
+
+if(ENABLE_VOLK)
+
+include(GrPackage)
+CPACK_SET(CPACK_COMPONENT_GROUP_VOLK_DESCRIPTION "Vector optimized library of kernels")
+
+CPACK_COMPONENT("volk_runtime"
+    GROUP        "Volk"
+    DISPLAY_NAME "Runtime"
+    DESCRIPTION  "Dynamic link libraries"
+)
+
+CPACK_COMPONENT("volk_devel"
+    GROUP        "Volk"
+    DISPLAY_NAME "Development"
+    DESCRIPTION  "C++ headers, package config, import libraries"
+)
+
+
+add_subdirectory(volk)
+endif(ENABLE_VOLK)
+
+
+GR_VMCIRCBUF()
+
+########################################################################
+# Distribute the README file
+########################################################################
+install(
+    FILES README README.hacking
+    DESTINATION ${GR_PKG_DOC_DIR}
+    COMPONENT "docs"
+)
+
+
+########################################################################
+# Add subdirectories (in order of deps)
+########################################################################
+add_subdirectory(gruel)
+add_subdirectory(gnuradio-core)
+
+add_subdirectory(gr-fft)
+add_subdirectory(gr-digital)
+add_subdirectory(gr-uhd)
+add_subdirectory(level)
+
+#finalize cpack after subdirs processed
+include(GrPackage)
+CPACK_FINALIZE()
+
+########################################################################
+# Print summary
+########################################################################
+GR_PRINT_COMPONENT_SUMMARY()
+message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "Building for version: ${VERSION} / ${LIBVER}")

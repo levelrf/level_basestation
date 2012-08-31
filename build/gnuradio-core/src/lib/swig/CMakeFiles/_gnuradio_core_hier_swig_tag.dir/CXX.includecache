@@ -1,0 +1,10 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/rob/workspace/gnuradio/level_basestation/build/gnuradio-core/src/lib/swig/_gnuradio_core_hier_swig_tag.cpp
+
