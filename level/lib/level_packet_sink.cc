@@ -52,13 +52,13 @@ level_packet_sink::enter_decode_packet()
 }
 
 level_packet_sink_sptr
-level_make_packet_sink (const std::vector<unsigned char>& preamble,
+level_make_packet_sink (const std::vector<uint8_t>& preamble,
                         gr_msg_queue_sptr target_queue)
 {
   return level_packet_sink_sptr (new level_packet_sink (preamble, target_queue));
 }
 
-level_packet_sink::level_packet_sink (const std::vector<unsigned char>& preamble,
+level_packet_sink::level_packet_sink (const std::vector<uint8_t>& preamble,
 					gr_msg_queue_sptr target_queue)
   	: gr_sync_block ("level_packet_sink",
 		   gr_make_io_signature (1, 1, sizeof(float)),
@@ -87,7 +87,7 @@ level_packet_sink::work (int noutput_items,
 {
   float *inbuf = (float *) input_items[0];
   int count = 0;
-  d_threshold = 2;
+  d_threshold = 3;
   
   //if (VERBOSE)
   //  fprintf(stderr, ">>> Entering state machine\n"), fflush(stderr);
@@ -100,6 +100,7 @@ level_packet_sink::work (int noutput_items,
         //if (VERBOSE)
         //  fprintf(stderr,"PREAMBLE Search, noutput=%d preamble=%s\n", noutput_items, 
         //          binary_fmt(d_preamble, tmp)), fflush(stderr);
+        //fprintf(stderr,"inbuf: %d\n", slice(*inbuf)), fflush(stderr);
 
         while (count < noutput_items) {
           if(slice(inbuf[count++]))
@@ -107,12 +108,15 @@ level_packet_sink::work (int noutput_items,
           else
             d_preamble_reg = d_preamble_reg << 1;
 
+          //fprintf(stderr,"d_preamble_reg: %s\n", binary_fmt(d_preamble_reg, tmp)), fflush(stderr);
           if(gr_count_bits64(d_preamble_reg ^ d_preamble) <= d_threshold) {
             if (VERBOSE)
               fprintf(stderr,"FOUND PREAMBLE, detected=%s preamble=%s\n", binary_fmt(d_preamble_reg, tmp), 
                   binary_fmt(d_preamble, tmp)), fflush(stderr);
             enter_sync_search();
             break;
+          }else if(gr_count_bits64(d_preamble_reg ^ d_preamble) != 16) {
+            fprintf(stderr,"wrong preamble: %s\n", binary_fmt(d_preamble_reg, tmp)), fflush(stderr);
           }
         }
         break;

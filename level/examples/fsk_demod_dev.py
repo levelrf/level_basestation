@@ -43,7 +43,9 @@ class simple_fsk_demod(gr.top_block):
 		self.fm_demod = gr.quadrature_demod_cf(1 / sensitivity)
 		self.freq_offset = gr.single_pole_iir_filter_ff(alpha)
 		self.sub = gr.sub_ff()
-		self.invert = gr.multiply_const_vff(-1)
+		self.add = gr.add_ff()
+		self.multiply = gr.multiply_ff()
+		self.invert = gr.multiply_const_vff((-1, ))
 
 		# recover the clock
 		omega = sps
@@ -55,12 +57,13 @@ class simple_fsk_demod(gr.top_block):
 		self.clock_recovery = digital.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu, omega_relative_limit)
 
 		self.slice = digital.binary_slicer_fb()
-		self.sink = gr.vector_sink_b(1)
+		self.sink = gr.vector_sink_f(1)
 
 		##################################################
 		# Connections
 		##################################################
-		self.connect(self.uhd_usrp_source_0, self.fm_demod, self.freq_offset, self.invert, self.clock_recovery, self.slice, self.sink)
+		self.connect(self.fm_demod, self.freq_offset, (self.sub, 1))
+		self.connect(self.uhd_usrp_source_0, self.fm_demod, (self.sub, 0), self.clock_recovery, self.sink)
 
 if __name__ == '__main__':
 	gr.enable_realtime_scheduling()
@@ -70,6 +73,6 @@ if __name__ == '__main__':
 	tb.stop()
 	sink_data = tb.sink.data()
 	ones = len([x for x in sink_data if x is 1])
-	print float(ones) / len(sink_data)
-	#print sink_data[-1000:]
+	#print float(ones) / len(sink_data)
+	print sink_data[-1000:]
 

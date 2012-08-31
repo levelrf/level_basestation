@@ -2,7 +2,7 @@ from math import pi
 
 from gnuradio import gr
 from level_swig import *
-from fsk import fsk_demod
+from fsk import fsk_demod_cf
 import gnuradio.gr.gr_threading as _threading
 import struct
 
@@ -38,7 +38,7 @@ class cc1k_demod_pkts(gr.hier_block2):
         self._preamble = preamble
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
-        self.demod = fsk_demod()
+        self.demod = fsk_demod_cf()
         self._packet_sink = packet_sink(map(ord, preamble), self._rcvd_pktq)
         
         self.connect(self, self.demod, self._packet_sink)

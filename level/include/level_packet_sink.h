@@ -11,13 +11,13 @@ class level_packet_sink;
 
 typedef boost::shared_ptr<level_packet_sink> level_packet_sink_sptr;
 
-level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& preamble,
+level_packet_sink_sptr level_make_packet_sink (const std::vector<uint8_t>& preamble,
 			   gr_msg_queue_sptr target_queue);
 
 class level_packet_sink : public gr_sync_block
 {
 private:
- 	friend level_packet_sink_sptr level_make_packet_sink (const std::vector<unsigned char>& preamble,
+ 	friend level_packet_sink_sptr level_make_packet_sink (const std::vector<uint8_t>& preamble,
 			   gr_msg_queue_sptr target_queue);	
  	
  	level_packet_sink();   // private constructor	
@@ -46,7 +46,7 @@ private:
  	uint32_t     	     d_payload_cnt;						// how many bytes in payload
   
 protected:
- 	level_packet_sink(const std::vector<unsigned char>& preamble, 
+ 	level_packet_sink(const std::vector<uint8_t>& preamble, 
 		       gr_msg_queue_sptr target_queue);
  	
  	void enter_search();
