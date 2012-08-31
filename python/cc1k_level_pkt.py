@@ -2,8 +2,8 @@ from math import pi
 
 from gnuradio import gr
 from level_swig import *
+from fsk import fsk_demod
 import gnuradio.gr.gr_threading as _threading
-from fsk_demod import fsk_demod
 import struct
 
 class cc1k_demod_pkts(gr.hier_block2):
@@ -14,14 +14,14 @@ class cc1k_demod_pkts(gr.hier_block2):
     app via the callback.
     """
 
-    def __init__(self, preamble=None, callback=None, *args, **kwargs):
+    def __init__(self, preamble=None, callback=None):
         """
     	Hierarchical block for binary FSK demodulation.
 
     	The input is the complex modulated signal at baseband.
             Demodulated packets are sent to the handler.
 
-            @param preamble: 30-bit preamble
+            @param preamble: 32-bit preamble
             @type preamble: string
             @param callback:  function of two args: ok, payload
             @type callback: ok: bool; payload: string
@@ -34,11 +34,11 @@ class cc1k_demod_pkts(gr.hier_block2):
             gr.io_signature(0, 0, 0))                    # Output signature
 
         if preamble is None:
-            preamble = chr(0b10101010) + chr(0b10101010) + chr(0b10101010) + chr(0b10101000)
+            preamble = chr(0b10101010) + chr(0b10101010) + chr(0b10101010) + chr(0b10101010)
         self._preamble = preamble
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
-        self.demod = fsk_demod(*args, **kwargs)
+        self.demod = fsk_demod()
         self._packet_sink = packet_sink(map(ord, preamble), self._rcvd_pktq)
         
         self.connect(self, self.demod, self._packet_sink)
@@ -70,7 +70,6 @@ class _queue_watcher_thread(_threading.Thread):
         while self.keep_running:
             print "cc1k_level_pkt: waiting for packet"
             msg = self.rcvd_pktq.delete_head()
-            ok = 1
             payload = msg.to_string()
             
             print "received packet "

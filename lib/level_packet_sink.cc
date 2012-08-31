@@ -48,7 +48,7 @@ level_packet_sink::enter_decode_packet()
 
   d_state = STATE_DECODE_PACKET;
   d_packet_byte = 0;
-  d_packet_length = 2; // TODO: extract packet length
+  d_packet_length = 4; // TODO: extract packet length
 }
 
 level_packet_sink_sptr
@@ -75,7 +75,7 @@ level_packet_sink::level_packet_sink (const std::vector<unsigned char>& preamble
   if ( VERBOSE )
     fprintf(stderr, "preamble: %s\n", binary_fmt(d_preamble, tmp)), fflush(stderr);
 
-  d_sync = 0xD391;
+  d_sync = 0xD391; // TODO: pass as argument
 }
 
 level_packet_sink::~level_packet_sink () {}
@@ -87,7 +87,7 @@ level_packet_sink::work (int noutput_items,
 {
   float *inbuf = (float *) input_items[0];
   int count = 0;
-  d_threshold = 3;
+  d_threshold = 2;
   
   //if (VERBOSE)
   //  fprintf(stderr, ">>> Entering state machine\n"), fflush(stderr);
@@ -138,11 +138,13 @@ level_packet_sink::work (int noutput_items,
               fprintf(stderr,"FOUND SYNC, detected=%s sync=%s\n", binary_fmt(d_sync_reg, tmp), 
                   binary_fmt(d_sync, tmp)), fflush(stderr);
             enter_decode_packet();
-          }else if(d_sync_len_index >= 16){
+            break;
+          }else if(d_sync_len_index >= 15){
             // wrong sync word after preamble
             if (VERBOSE)
               fprintf(stderr,"WRONG SYNC, incorrect=%d\n", gr_count_bits64(d_sync_reg ^ d_sync)), fflush(stderr);
             enter_search();
+            break;
           }
         }
         break;

@@ -27,8 +27,8 @@ class fsk_rx(grc_wxgui.top_block_gui):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 500e3
-        self.f_center = f_center = 867e6
-        self.bandwidth = bandwidth = 1e6
+        self.f_center = f_center = 867.98e6
+        self.bandwidth = bandwidth = 250e3
         self.gain = gain = 0
 
         ##################################################
@@ -70,18 +70,15 @@ class fsk_rx(grc_wxgui.top_block_gui):
         self.uhd_src.set_center_freq(self.f_center, 0)
         self.uhd_src.set_gain(self.gain, 0)
 
-        self.data_rate = 2.4e3
-        self.samples_per_symbol = 8
+        self.data_rate = 500e3
+        self.samples_per_symbol = 4
         self.usrp_decim = int (64e6 / self.samples_per_symbol / self.data_rate)
         self.fs = self.data_rate * self.samples_per_symbol
-        payload_size = 128             # bytes
+        payload_size = 4             # bytes
 
         taps = firdes.low_pass_2(1, 1, 0.4, 0.1, 60)
 
-        self.packet_receiver = level.cc1k_demod_pkts(callback=rx_callback(),
-                                                    sps=self.samples_per_symbol,
-                                                    symbol_rate=self.data_rate,
-                                                    p_size=payload_size)
+        self.packet_receiver = level.cc1k_demod_pkts(callback=rx_callback())
 
         #self.filesink = gr.file_sink(gr.sizeof_gr_complex, 'rx_test.dat')
 
