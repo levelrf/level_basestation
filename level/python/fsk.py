@@ -3,7 +3,7 @@ from gnuradio import digital
 from math import pi
 
 class fsk_demod_cf(gr.hier_block2):
-    def __init__(self, sps = 2):
+    def __init__(self):
         """
         Hierarchical block for FSK demodulation.
     
@@ -15,12 +15,29 @@ class fsk_demod_cf(gr.hier_block2):
                 gr.io_signature(1, 1, gr.sizeof_gr_complex),
                 gr.io_signature(1, 1, gr.sizeof_float))
 
+        # Variables
+
+        # stream symbol rate
+        #self.symbol_rate = symbol_rate = 19.2e3
+        # packet symbol rate
+        self.symbol_rate = symbol_rate = 19.2e3
+        self.decimation = decimation = 8
+        self.samp_rate = samp_rate = symbol_rate * decimation
+        self.f_center = f_center = 868e6
+        self.sps = sps = 2
         self.sensitivity = sensitivity = (pi / 2) / sps
-        self.alpha = alpha = 0.0512 / sps
-        
+        self.alpha = alpha = 0.0512/sps
+
+        # Blocks
+        channel_coeffs = gr.firdes.low_pass(1.0, samp_rate, 40e3, 60e3, gr.firdes.WIN_HAMMING)
+        self.select_frequency = gr.freq_xlating_fir_filter_ccf(decimation, channel_coeffs, 0, samp_rate)
+
         self.fm_demod = gr.quadrature_demod_cf(1 / sensitivity)
+        
         self.freq_offset = gr.single_pole_iir_filter_ff(alpha)
         self.sub = gr.sub_ff()
+        self.add = gr.add_ff()
+        self.multiply = gr.multiply_ff()
         self.invert = gr.multiply_const_vff((-1, ))
 
         # recover the clock
@@ -32,7 +49,10 @@ class fsk_demod_cf(gr.hier_block2):
         gain_omega = .25 * gain_mu * gain_mu        # critically damped
         self.clock_recovery = digital.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu, omega_relative_limit)
 
-        # perform slicing in packet sink
-        #self.slice = digital.binary_slicer_fb()
+        self.slice = digital.binary_slicer_fb()
 
-        self.connect(self, self.fm_demod, self.freq_offset, self.invert, self.clock_recovery, self)
+        # Connections
+        self.connect(self.fm_demod, (self.add, 0))
+        self.connect(self.fm_demod, self.freq_offset, (self.add, 1))
+        self.connect(self, self.fm_demod)
+        self.connect(self.add, self.clock_recovery, self.invert, self)

@@ -1,8 +1,8 @@
 from math import pi
-
 from gnuradio import gr
+from gnuradio import digital
 from level_swig import *
-from fsk import fsk_demod_cf
+from msk import msk_demod_cf
 import gnuradio.gr.gr_threading as _threading
 import struct
 
@@ -38,19 +38,14 @@ class cc1k_demod_pkts(gr.hier_block2):
         self._preamble = preamble
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
-        self.demod = fsk_demod_cf()
+        self.msk_demod = msk_demod_cf()
         self._packet_sink = packet_sink(map(ord, preamble), self._rcvd_pktq)
         
-        self.connect(self, self.demod, self._packet_sink)
-        #filesink = gr.file_sink(gr.sizeof_gr_complex, "/tmp/rx.log")
-        #fg.connect(self.demod, filesink)
+        self.connect(self, self.msk_demod, self._packet_sink)
       
         self._watcher = _queue_watcher_thread(self._rcvd_pktq, callback)
 
     def carrier_sensed(self):
-        """
-        Return True if we detect carrier.
-        """
         return self._packet_sink.carrier_sensed()
 
 
@@ -71,32 +66,6 @@ class _queue_watcher_thread(_threading.Thread):
             print "cc1k_level_pkt: waiting for packet"
             msg = self.rcvd_pktq.delete_head()
             payload = msg.to_string()
-            
             print "received packet "
             print payload
-            #am_group = ord(payload[0])
-            #module_src = ord(payload[1])
-            #module_dst = ord(payload[2])
-            #dst_addr = ord(payload[4])*256 + ord(payload[3])
-            #src_addr = ord(payload[6])*256 + ord(payload[5])
-            #msg_type = ord(payload[7])
-            #msg_len = ord(payload[8])
-            #msg_payload = payload[9:9+msg_len]
-            #crc = ord(payload[-2]) + ord(payload[-1])*256
-
-            #crcClass = crc8.crc8()
-            #crcCheck = crcClass.crc(payload[1:9+msg_len])
-
-            #print " bare msg: " + str(map(hex, map(ord, payload)))
-            #print " am group: " + str(am_group)
-            #print "  src_addr: "+str(src_addr)+" dst_addr: "+str(dst_addr)
-            #print "  src_module: " + str(module_src) + " dst_module: " + str(module_dst)
-            #print "  msg type: " + str(msg_type) + " msg len: " +str(msg_len)
-            #print "  msg: " + str(map(hex, map(ord, msg_payload)))
-            #print "  crc: " + str(crc)
-            #print "  crc_check: " + str(crcCheck)
-            #print
-            #ok = (crc == crcCheck)
-            if self.callback:
-                pass
-                #self.callback(ok, am_group, src_addr, dst_addr, module_src, module_dst, msg_type, msg_payload, crc)
+            print ord(payload)

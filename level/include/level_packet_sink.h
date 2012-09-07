@@ -22,7 +22,7 @@ private:
  	
  	level_packet_sink();   // private constructor	
  	
- 	enum state_t {STATE_PREAMBLE_SEARCH, STATE_SYNC_SEARCH, STATE_DECODE_PACKET};	
+ 	enum state_t {STATE_PREAMBLE_SEARCH, STATE_SYNC_SEARCH, WASTE_MIDAMBLE, STATE_DECODE_PACKET};	
  	
  	static const int MSG_LEN_POS = 8+1;        			  	// 8 byte sos header, 1 byte AM type
  	static const int MAX_PKT_LEN = 128 - MSG_LEN_POS - 1;	// remove header and CRC	
@@ -37,6 +37,8 @@ private:
  	uint32_t		     d_preamble_reg;					// used to look for preamble
  	uint16_t		     d_sync_reg;						// used to look for sync word
  	uint8_t				 d_sync_len_index;					// track length of sync word
+ 	uint32_t			 d_mid_reg;							// store midamble
+ 	uint8_t				 d_midamble_count;					// track length of midamble
   
  	uint8_t				 d_packet[MAX_PKT_LEN];				// assembled payload
  	uint8_t			     d_packet_byte;						// byte being assembled
@@ -51,6 +53,7 @@ protected:
  	
  	void enter_search();
  	void enter_sync_search();
+ 	void enter_midamble();
  	void enter_decode_packet();
 
  	int slice(float x) { return x > 0 ? 1 : 0; }
