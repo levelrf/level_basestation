@@ -13,10 +13,7 @@ class simple_fsk_demod(gr.top_block):
 		gr.top_block.__init__(self, "FSK Demod Demo")
 
 		# Variables
-		# stream symbol rate
-		#self.symbol_rate = symbol_rate = 19.2e3
-		# packet symbol rate
-		self.symbol_rate = symbol_rate = 306.28e3
+		self.symbol_rate = symbol_rate = 125e3
 		self.samp_rate = samp_rate = symbol_rate
 		self.f_center = f_center = 868e6
 		self.sps = sps = 2

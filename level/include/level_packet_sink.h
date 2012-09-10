@@ -22,7 +22,7 @@ private:
  	
  	level_packet_sink();   // private constructor	
  	
- 	enum state_t {STATE_PREAMBLE_SEARCH, STATE_SYNC_SEARCH, WASTE_MIDAMBLE, STATE_DECODE_PACKET};	
+ 	enum state_t {STATE_PREAMBLE_SEARCH, STATE_SYNC_SEARCH, STATE_LENGTH_BYTE, STATE_DECODE_PACKET};	
  	
  	static const int MSG_LEN_POS = 8+1;        			  	// 8 byte sos header, 1 byte AM type
  	static const int MAX_PKT_LEN = 128 - MSG_LEN_POS - 1;	// remove header and CRC	
