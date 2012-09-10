@@ -67,5 +67,4 @@ class _queue_watcher_thread(_threading.Thread):
             msg = self.rcvd_pktq.delete_head()
             payload = msg.to_string()
             print "received packet "
-            print payload
-            print ord(payload)
+            print payload.encode("hex")

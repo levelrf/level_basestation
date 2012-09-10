@@ -16,21 +16,9 @@ class fsk_demod_cf(gr.hier_block2):
                 gr.io_signature(1, 1, gr.sizeof_float))
 
         # Variables
-
-        # stream symbol rate
-        #self.symbol_rate = symbol_rate = 19.2e3
-        # packet symbol rate
-        self.symbol_rate = symbol_rate = 19.2e3
-        self.decimation = decimation = 8
-        self.samp_rate = samp_rate = symbol_rate * decimation
-        self.f_center = f_center = 868e6
         self.sps = sps = 2
         self.sensitivity = sensitivity = (pi / 2) / sps
         self.alpha = alpha = 0.0512/sps
-
-        # Blocks
-        channel_coeffs = gr.firdes.low_pass(1.0, samp_rate, 40e3, 60e3, gr.firdes.WIN_HAMMING)
-        self.select_frequency = gr.freq_xlating_fir_filter_ccf(decimation, channel_coeffs, 0, samp_rate)
 
         self.fm_demod = gr.quadrature_demod_cf(1 / sensitivity)
         
