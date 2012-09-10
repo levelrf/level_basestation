@@ -1,0 +1,5 @@
+Convert.m is an octave script that will look for a file called rx.dat in your home directory. It's set up with my account right now, so you'll probably have to manually change that. It looks for a preamble and the shows all 
+the results in hex. 
+
+
+test.grc has the flowgraph for usrp->1101 (current disabled) and the one for 1101->usrp.
