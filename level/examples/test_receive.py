@@ -40,13 +40,10 @@ class fsk_rx(gr.top_block):
         self.uhd_src.set_center_freq(self.f_center, 0)
         self.uhd_src.set_gain(self.gain, 0)
 
-        self.decimate = blks2.rational_resampler_ccc(1, 8)
-
         self.packet_receiver = level.cc1k_demod_pkts(callback=rx_callback())
 
         # Connections
         self.connect(self.uhd_src, self.packet_receiver)
-        #self.connect(self.packet_receiver, self.filesink)
 
 if __name__ == '__main__':
     rx = fsk_rx()
