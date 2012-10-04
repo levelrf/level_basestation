@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='ASCII'?>
 <flow_graph>
-  <timestamp>Wed Oct  3 23:43:52 2012</timestamp>
+  <timestamp>Wed Oct  3 23:43:43 2012</timestamp>
   <block>
     <key>options</key>
     <param>
       <key>id</key>
-      <value>test_mac</value>
+      <value>heartbeat_521mhz</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -72,11 +72,11 @@
     </param>
     <param>
       <key>value</key>
-      <value>125e3</value>
+      <value>1e6</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(185, 13)</value>
+      <value>(189, 9)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -227,7 +227,7 @@
     </param>
     <param>
       <key>center_freq0</key>
-      <value>868e6</value>
+      <value>521e6</value>
     </param>
     <param>
       <key>gain0</key>
@@ -239,7 +239,7 @@
     </param>
     <param>
       <key>bw0</key>
-      <value>200e3</value>
+      <value>50e3</value>
     </param>
     <param>
       <key>center_freq1</key>
@@ -739,7 +739,50 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(681, 148)</value>
+      <value>(622, 219)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>extras_signal_source</key>
+    <param>
+      <key>id</key>
+      <value>extras_signal_source_0</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>fc32</value>
+    </param>
+    <param>
+      <key>wave</key>
+      <value>COSINE</value>
+    </param>
+    <param>
+      <key>samp_rate</key>
+      <value>samp_rate</value>
+    </param>
+    <param>
+      <key>wave_freq</key>
+      <value>1000</value>
+    </param>
+    <param>
+      <key>off</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>scalar</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(136, 238)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -774,7 +817,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(421, 170)</value>
+      <value>(276, 109)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -782,34 +825,30 @@
     </param>
   </block>
   <block>
-    <key>extras_socket_to_blob</key>
+    <key>heart_beat</key>
     <param>
       <key>id</key>
-      <value>extras_socket_to_blob_0</value>
+      <value>heart_beat_0</value>
     </param>
     <param>
       <key>_enabled</key>
       <value>True</value>
     </param>
     <param>
-      <key>proto</key>
-      <value>TCP</value>
+      <key>period</key>
+      <value>1</value>
     </param>
     <param>
-      <key>addr</key>
-      <value>127.0.0.1</value>
+      <key>key</key>
+      <value>W</value>
     </param>
     <param>
-      <key>port</key>
-      <value>8000</value>
-    </param>
-    <param>
-      <key>mtu</key>
-      <value>0</value>
+      <key>value</key>
+      <value>TEST</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(162, 196)</value>
+      <value>(29, 106)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -817,13 +856,19 @@
     </param>
   </block>
   <connection>
-    <source_block_id>extras_socket_to_blob_0</source_block_id>
+    <source_block_id>heart_beat_0</source_block_id>
     <sink_block_id>digital_gmsk_mod_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>digital_gmsk_mod_0</source_block_id>
+    <sink_block_id>uhd_usrp_sink_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>extras_signal_source_0</source_block_id>
     <sink_block_id>uhd_usrp_sink_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
