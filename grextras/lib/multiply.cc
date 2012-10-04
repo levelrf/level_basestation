@@ -28,65 +28,9 @@
 using namespace gnuradio::extras;
 
 /***********************************************************************
- * Multiplier implementation with complex float32 - calls volk
+ * Templated multipler class
  **********************************************************************/
-struct multiply_fc32_work{
-    operator bool(){return true;}
-    void operator()(
-        const size_t num_items,
-        const gnuradio::block::InputItems &input_items,
-        const gnuradio::block::OutputItems &output_items
-    ){
-        std::complex<float> *out = output_items[0].cast<std::complex<float> *>();
-        const std::complex<float> *in0 = input_items[0].cast<const std::complex<float> *>();
-
-        for (size_t n = 1; n < input_items.size(); n++){
-            const std::complex<float> *in = input_items[n].cast<const std::complex<float> *>();
-            volk_32fc_x2_multiply_32fc_a(out, in0, in, num_items);
-            in0 = out; //for next input, we do output += input
-        }
-    }
-};
-
-/***********************************************************************
- * Multiplier implementation with float32 - calls volk
- **********************************************************************/
-struct multiply_f32_work{
-    operator bool(){return true;}
-    void operator()(
-        const size_t num_items,
-        const gnuradio::block::InputItems &input_items,
-        const gnuradio::block::OutputItems &output_items
-    ){
-        float *out = output_items[0].cast<float *>();
-        const float *in0 = input_items[0].cast<const float *>();
-
-        for (size_t n = 1; n < input_items.size(); n++){
-            const float *in = input_items[n].cast<const float *>();
-            volk_32f_x2_multiply_32f_a(out, in0, in, num_items);
-            in0 = out; //for next input, we do output += input
-        }
-    }
-};
-
-/***********************************************************************
- * To use the generic impl
- **********************************************************************/
-struct multiply_nop_work{
-    operator bool(){return false;}
-    void operator()(
-        const size_t,
-        const gnuradio::block::InputItems &,
-        const gnuradio::block::OutputItems &
-    ){
-        //NOP
-    }
-};
-
-/***********************************************************************
- * Generic multiplyer implementation
- **********************************************************************/
-template <typename type, typename WorkType = multiply_nop_work>
+template <typename type>
 class multiply_generic : public multiply{
 public:
     multiply_generic(const size_t num_inputs, const size_t vlen):
@@ -97,48 +41,107 @@ public:
         ),
         _vlen(vlen)
     {
-        if (_volk_work){
-            const int alignment_multiple = volk_get_alignment() / (sizeof(type)*vlen);
-            set_output_multiple(std::max(1, alignment_multiple));
-        }
+        const int alignment_multiple = get_work_multiple() / (sizeof(type)*vlen);
+        set_output_multiple(std::max(1, alignment_multiple));
     }
+
+    size_t get_work_multiple(void);
 
     int work(
         const InputItems &input_items,
         const OutputItems &output_items
-    ){
-        const size_t noutput_items = output_items[0].size();
-
-        if (_volk_work){
-            _volk_work(noutput_items * _vlen, input_items, output_items);
-            return noutput_items;
-        }
-
-        const size_t n_nums = output_items[0].size() * _vlen;
-        type *out = output_items[0].cast<type *>();
-        const type *in0 = input_items[0].cast<const type *>();
-
-        for (size_t n = 1; n < input_items.size(); n++){
-            const type *in = input_items[n].cast<const type *>();
-            for (size_t i = 0; i < n_nums; i++){
-                out[i] = in0[i] * in[i];
-            }
-            in0 = out; //for next input, we do output *= input
-        }
-
-        return output_items[0].size();
-    }
+    );
 
 private:
     const size_t _vlen;
-    WorkType _volk_work;
 };
+
+/***********************************************************************
+ * Generic multiplier implementation
+ **********************************************************************/
+template <typename type>
+size_t multiply_generic<type>::get_work_multiple(void)
+{
+    return 1;
+}
+
+template <typename type>
+int multiply_generic<type>::work(
+    const InputItems &input_items,
+    const OutputItems &output_items
+){
+    const size_t n_nums = output_items[0].size() * _vlen;
+    type *out = output_items[0].cast<type *>();
+    const type *in0 = input_items[0].cast<const type *>();
+
+    for (size_t n = 1; n < input_items.size(); n++){
+        const type *in = input_items[n].cast<const type *>();
+        for (size_t i = 0; i < n_nums; i++){
+            out[i] = in0[i] * in[i];
+        }
+        in0 = out; //for next input, we do output += input
+    }
+
+    return output_items[0].size();
+}
+
+/***********************************************************************
+ * Multiplier implementation with complex complex float32 - calls volk
+ **********************************************************************/
+template <>
+size_t multiply_generic<std::complex<float> >::get_work_multiple(void)
+{
+    return volk_get_alignment();
+}
+
+template <>
+int multiply_generic<std::complex<float> >::work(
+    const InputItems &input_items,
+    const OutputItems &output_items
+){
+    const size_t n_nums = output_items[0].size() * _vlen;
+    std::complex<float> *out = output_items[0].cast<std::complex<float> *>();
+    const std::complex<float> *in0 = input_items[0].cast<const std::complex<float> *>();
+
+    for (size_t n = 1; n < input_items.size(); n++){
+        const std::complex<float> *in = input_items[n].cast<const std::complex<float> *>();
+        volk_32fc_x2_multiply_32fc_a(out, in0, in, n_nums);
+        in0 = out; //for next input, we do output += input
+    }
+    return output_items[0].size();
+}
+
+/***********************************************************************
+ * Multiplier implementation with float32 - calls volk
+ **********************************************************************/
+template <>
+size_t multiply_generic<float>::get_work_multiple(void)
+{
+    return volk_get_alignment();
+}
+
+template <>
+int multiply_generic<float>::work(
+    const InputItems &input_items,
+    const OutputItems &output_items
+){
+    const size_t n_nums = output_items[0].size() * _vlen;
+    float *out = output_items[0].cast<float *>();
+    const float *in0 = input_items[0].cast<const float *>();
+
+    for (size_t n = 1; n < input_items.size(); n++){
+        const float *in = input_items[n].cast<const float *>();
+        volk_32f_x2_multiply_32f_a(out, in0, in, n_nums);
+        in0 = out; //for next input, we do output += input
+    }
+    return output_items[0].size();
+}
 
 /***********************************************************************
  * factory function
  **********************************************************************/
 multiply::sptr multiply::make_fc32_fc32(const size_t num_inputs, const size_t vlen){
-    return gnuradio::get_initial_sptr(new multiply_generic<float, multiply_fc32_work>(num_inputs, 2*vlen));
+    return gnuradio::get_initial_sptr(new multiply_generic<std::complex<float> >(num_inputs, vlen));
 }
 
 multiply::sptr multiply::make_sc32_sc32(const size_t num_inputs, const size_t vlen){
@@ -154,7 +157,7 @@ multiply::sptr multiply::make_sc8_sc8(const size_t num_inputs, const size_t vlen
 }
 
 multiply::sptr multiply::make_f32_f32(const size_t num_inputs, const size_t vlen){
-    return gnuradio::get_initial_sptr(new multiply_generic<float, multiply_f32_work>(num_inputs, vlen));
+    return gnuradio::get_initial_sptr(new multiply_generic<float>(num_inputs, vlen));
 }
 
 multiply::sptr multiply::make_s32_s32(const size_t num_inputs, const size_t vlen){

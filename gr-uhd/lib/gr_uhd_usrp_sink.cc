@@ -25,6 +25,8 @@
 #include <boost/make_shared.hpp>
 #include "gr_uhd_common.h"
 
+#include <stdio.h>
+
 static const pmt::pmt_t SOB_KEY = pmt::pmt_string_to_symbol("tx_sob");
 static const pmt::pmt_t EOB_KEY = pmt::pmt_string_to_symbol("tx_eob");
 static const pmt::pmt_t TIME_KEY = pmt::pmt_string_to_symbol("tx_time");
