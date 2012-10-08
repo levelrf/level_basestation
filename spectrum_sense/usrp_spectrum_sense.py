@@ -413,62 +413,9 @@ def main_loop(tb):
         # Probably want to do the equivalent of "fftshift" on them
         # m.raw_data is a string that contains the binary floats.
         # You could write this as binary to a file.
-	if m.center_freq == (tb.max_freq - 1625000):
-		done = 1
-		print qsortr(chunk_score)
-
-    N = 10000 #Should be tb.nsamples
-    xx = scipy.random.randn(N)
-    xy = scipy.random.randn(N)
-    bits = 2*scipy.complex64(scipy.random.randint(0, 2, N)) - 1
-
-    snr_known = list()
-    snr_python = list()
-    snr_gr = list()
-    #when to issue an SNR tag, but this can be ignored here
-    ntag = 10000
-    n_cpx = xx +1j*xy
-    py_est = py_estimators[options.type]
-    gr_est = gr_estimators[options.type]
-
-    SNR_min = options.snr_min
-    SNR_max = options.snr_max
-    SNR_step = options.snr_step
-    SNR_dB = scipy.arange(SNR_min, SNR_max+SNR_step, SNR_step)
-    for snr in SNR_dB:
-	SNR = 10.0**(snr/10.0)
-	scale = scipy.sqrt(SNR)
-	yy = bits + n_cpx/scale
-	print "SNR: ", snr
-	Sknown = scipy.mean(yy**2)
-	Nknown = scipy.var(n_cpx/scale)/2
-	snr0 = Sknown/Nknown
-	snr0dB = 10.0*scipy.log10(snr0)
-	snr_known.append(snr0dB)
-	snrdB, snr = py_est(yy)
-	snr_python.append(snrdB)
-	grc_src = gr.vector_source_c(bits.tolist(), False)
-	gr_snr = digital.mpsk_snr_est_cc(gr_est, ntag, 0.001)
-	gr_chn = gr.channel_model(1.0/scale)
-	gr_sn = gr.null_sink(gr.sizeof_gr_complex)
-	tb = gr.top_block()
-	tb.connect(gr_src, gr_chn, gr_snr, gr_snk)
-	tb.run()
-	
-	snr_gr.append(gr_snr.snr())
-
-    f1 = pylab.figure(1)
-    s1 = f1.add_subplot(1,1,1)
-    s1.plot(SNR_dB, snr_known, "k-o", linewidth=2, label="Known")
-    s1.plot(SNR_dB, snr_python, "b-o", linewidth=2, label="Python")
-    s1.plot(SNR_dB, snr_gr, "g-o", linewidth=2, label="GNU Radio")
-    s1.grid(True)
-    s1.set_title('SNR Estimators')
-    s1.set_xlabel('SNR (dB)')
-    s1.set_ylabel('Estimated SNR')
-    s1.legend()
-    pylab.show()
-
+	if m.center_freq >= (tb.max_freq - 1625000):
+	    done = 1
+	    print qsortr(chunk_score) 
 
 
 if __name__ == '__main__': #If we're running this script as the main program, do this stuff:

@@ -1,0 +1,5 @@
+assign_channels.py - Reassigns all clients to the best channel to minimize interference between all clients.
+
+get_channels.py - Looks up channel availabilty from Spectrum Bridge and then also does power level analysis by calling usrp_spectrum_sense.py.
+
+usrp_spectrum_sense.py - Does power level analysis on a given chunk of spectrum.
