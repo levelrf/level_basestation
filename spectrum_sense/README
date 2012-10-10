@@ -3,3 +3,9 @@ assign_channels.py - Reassigns all clients to the best channel to minimize inter
 get_channels.py - Looks up channel availabilty from Spectrum Bridge and then also does power level analysis by calling usrp_spectrum_sense.py.
 
 usrp_spectrum_sense.py - Does power level analysis on a given chunk of spectrum.
+
+config.py - Used for executing commands on clients (like changing their channel, bandwidth, etc)
+
+get.py - Used to get parameters about clients and the system 
+
+test_populate_db.py - Populates the database with some example data so you can experiment without needing real clients to connect

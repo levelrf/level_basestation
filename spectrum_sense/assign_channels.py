@@ -2,6 +2,8 @@
 #/usr/bin/env python
 #
 import math
+import get
+import config
 random.seed()
 
 #
@@ -11,22 +13,22 @@ random.seed()
 #very often.
 
 
-n = 5 #Number of users. Eventually will get this from base station via number_users()
-max = 4 #Number of channels available. Eventually will get this from base station via get_channels()
+n = get.users() #Number of users.
+max = length(get.channels()) #Number of channels available.
 z = [0] * n #This will hold the channel assignment solution
 T = 100 #Initial temperature. 100 was chosen emperically.
 i = 0
 iterations = 12 #A formula for getting this number should be derived emperically
-total_interference = 2 #Interference of all users. Eventually will get this from clients via get_interference()
+total_interference = get.totalInterference() #Interference of all users.
 
 while (i < iterations):
 	c = random.randrange(1,max) #pick a random channel that's open
 	u = random.randrange(1,n) #pick a random user
-	change_channel(u, c) #assign that channel to that user (change_channel() not implemented yet)
-	new_total_interference = get_interference() #get_interference() not implemented yet
+	config.change_channel(u, c) #assign that channel to that user
+	new_total_interference = get.totalInterference()
 	delta_I = total_interference - new_total_interference
 	if (delta_I > 0):
-		z = current_channel_assignment() #not implemented yet
+		z = get.currentChannelAssignment()
 		total_interference = new_total_interference
 	else
 		p = rand(1,0)

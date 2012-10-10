@@ -12,7 +12,7 @@ from xml.dom.minidom import parseString
 #ourselves to make sure they're free. Also, add a flag that will check for other open
 #channels as well, even if spectrum bridge says they're not free, because they often are.
 
-unbounded_search = True #Set this to True if you want to search ALL channels, not just the ones that spectrum bridge says are free. Often, channels marked used are really free, however using them is technically illegal.
+unbounded_search = False #Set this to True if you want to search ALL channels, not just the ones that spectrum bridge says are free. Often, channels marked used are really free, however using them is technically illegal.
 
 #The index of the dictionary below is the channel number and the number at that index is the frequency in MHz. If it's 0, then that channelisn't allocated.
 channels = [0, 0, 54, 60, 66, 76, 82, 174, 180, 186, 192, 198, 204, 210, 470, 476, 482, 488, 494, 500, 506, 512, 518, 524, 530, 536, 542, 548, 554, 560, 566, 572, 578, 584, 590, 596, 602, 608, 614, 620, 626, 632, 638, 644, 650, 656, 662, 668, 674, 680, 686, 692, 698, 704, 710, 716, 722, 728, 734, 740, 746, 752, 758, 764, 770, 776, 782, 788, 794, 800, 806, 812, 818, 824, 830, 836, 842, 848, 854, 860, 866, 872, 878, 884]
@@ -66,6 +66,7 @@ if (unbounded_search):
 		#FIXME This is not the right way to call this script. Should be imported and done theright way.
 		os.system('./usrp_spectrum_sense.py '+str(channels[j])+'M'+' '+str(channels[j]+6)+'M')
 
-
+def areOpen():
+	return ChannelList
 
  
