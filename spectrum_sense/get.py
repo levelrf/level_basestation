@@ -12,12 +12,11 @@ def users():
 
 def channels():
 	#return vector of available channels
-	return get_channels.areOpen
+	return get_channels.areOpen()
 
 def total_interference():
 	#return total interference from all clients
-	for i in 
-	return sum(clients.find({"interference"}))
+	
 
 def currentChannelAssignment():
 	#return vector of all client IDs and their assigned channel

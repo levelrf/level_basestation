@@ -21,6 +21,8 @@ i = 0
 iterations = 12 #A formula for getting this number should be derived emperically
 total_interference = get.totalInterference() #Interference of all users.
 
+#FIXME Do something more intelligent than just randomly changing channels around
+
 while (i < iterations):
 	c = random.randrange(1,max) #pick a random channel that's open
 	u = random.randrange(1,n) #pick a random user
@@ -28,14 +30,14 @@ while (i < iterations):
 	new_total_interference = get.totalInterference()
 	delta_I = total_interference - new_total_interference
 	if (delta_I > 0):
-		z = get.currentChannelAssignment()
+		# z = get.currentChannelAssignment()
 		total_interference = new_total_interference
 	else
 		p = rand(1,0)
 		if (p < exp(-(delta_I)/T)):
-			z = current_channel_assignment
+			# z = get.currentChannelAssignment()
 			total_interference = new_total_interference
 	T = T*0.8 #Decrease temperature. 0.8 was chosen emperically.
 	i = i + 1
-print z
+#print z
 
