@@ -24,7 +24,8 @@ import random
 
 from gnuradio import gr, blks2, gr_unittest
 from utils import mod_codes, alignment
-import digital_swig, packet_utils
+import packet_utils
+import filter_swig as filter
 from generic_mod_demod import generic_mod, generic_demod
 
 from qa_constellation import tested_constellations, twod_constell
@@ -51,7 +52,7 @@ FREQ_BW = 2*math.pi/100.0
 PHASE_BW = 2*math.pi/100.0
 
 
-class test_constellation_receiver (gr_unittest.TestCase):
+class test_constellation_receiver(gr_unittest.TestCase):
     
     # We ignore the first half of the output data since often it takes
     # a while for the receiver to lock on.
@@ -85,11 +86,16 @@ class test_constellation_receiver (gr_unittest.TestCase):
             # That is not implemented since the receiver has no way of
             # knowing where the beginning of a symbol is.
             # It also doesn't work for non-differential modulation.
-            if constellation.dimensionality() != 1 or not differential:
+            if constellation.dimensionality() != 1:
                 continue
             data_length = DATA_LENGTH * constellation.bits_per_symbol()
+            if differential:
+                freq_offset=True
+            else:
+                freq_offset=False
             tb = rec_test_tb(constellation, differential,
-                             src_data=self.src_data[:data_length])
+                             src_data=self.src_data[:data_length],
+                             freq_offset=freq_offset)
             tb.run()
             data = tb.dst.data()
             d1 = tb.src_data[:int(len(tb.src_data)*self.ignore_fraction)]
@@ -99,18 +105,20 @@ class test_constellation_receiver (gr_unittest.TestCase):
             self.assertTrue(correct > REQ_CORRECT)
             
 
-class rec_test_tb (gr.top_block):
+class rec_test_tb(gr.top_block):
     """
     Takes a constellation an runs a generic modulation, channel,
     and generic demodulation.
     """
     def __init__(self, constellation, differential,
-                 data_length=None, src_data=None):
+                 data_length=None, src_data=None, freq_offset=True):
         """
-        constellation -- a constellation object
-        differential -- whether differential encoding is used
-        data_length -- the number of bits of data to use
-        src_data -- a list of the bits to use
+        Args:
+            constellation: a constellation object
+            differential: whether differential encoding is used
+            data_length: the number of bits of data to use
+            src_data: a list of the bits to use
+            freq_offset: whether to use a frequency offset in the channel
         """
         super(rec_test_tb, self).__init__()
         # Transmission Blocks
@@ -122,11 +130,18 @@ class rec_test_tb (gr.top_block):
         src = gr.vector_source_b(self.src_data)
         mod = generic_mod(constellation, differential=differential)
         # Channel
-        channel = gr.channel_model(NOISE_VOLTAGE, FREQUENCY_OFFSET, TIMING_OFFSET)
+        if freq_offset:
+            channel = filter.channel_model(NOISE_VOLTAGE, FREQUENCY_OFFSET, TIMING_OFFSET)
+        else:
+            channel = filter.channel_model(NOISE_VOLTAGE, 0, TIMING_OFFSET)            
         # Receiver Blocks
-        demod = generic_demod(constellation, differential=differential,
-                              freq_bw=FREQ_BW,
-                              phase_bw=PHASE_BW)
+        if freq_offset:
+            demod = generic_demod(constellation, differential=differential,
+                                  freq_bw=FREQ_BW,
+                                  phase_bw=PHASE_BW)
+        else:
+            demod = generic_demod(constellation, differential=differential,
+                                  freq_bw=0, phase_bw=0)
         self.dst = gr.vector_sink_b()
         self.connect(src, packer, mod, channel, demod, self.dst)
 

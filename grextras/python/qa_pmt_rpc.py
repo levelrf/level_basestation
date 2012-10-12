@@ -29,6 +29,10 @@ from pmt_rpc import pmt_rpc
 try: import pmt
 except ImportError: from gruel import pmt
 
+my_mini_prog = """#!
+arg='hey this works'
+"""
+
 class control_block(gr.block):
     def __init__(self):
         gr.block.__init__(
@@ -39,6 +43,9 @@ class control_block(gr.block):
             num_msg_outputs = 1,
             has_msg_input = True,
         )
+
+    def test_print(self, arg):
+        print arg
 
     def work(self, input_items, output_items):
         self.post_msg(0, pmt.from_python("multx2"), pmt.from_python(((42,), None)))
@@ -51,6 +58,9 @@ class control_block(gr.block):
         assert(not error)
         print(result)
         assert(result == 42*2)
+
+        self.post_msg(0, pmt.from_python("_control_block.test_print"), pmt.from_python((('hello',), None)))
+        self.post_msg(0, pmt.from_python("_control_block.test_print"), pmt.from_python(((my_mini_prog,), None)))
 
         return -1
 

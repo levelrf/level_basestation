@@ -53,7 +53,6 @@ GR_PYTHON_INSTALL(PROGRAMS
     ofdm/benchmark_rx.py
     ofdm/benchmark_tx.py
     ofdm/gr_plot_ofdm.py
-    ofdm/ofdm_mod_demod_test.py
     ofdm/receive_path.py
     ofdm/transmit_path.py
     ofdm/tunnel.py
@@ -71,6 +70,7 @@ install(
     demod/pam_timing.grc
     demod/ber_simulation.grc
     demod/dpsk_loopback.grc   
+    demod/gfsk_loopback.grc
     DESTINATION ${GR_PKG_DIGITAL_EXAMPLES_DIR}/demod
     COMPONENT "digital_python"
 )

@@ -35,17 +35,21 @@ namespace gr {
   namespace fft {
 
 
-    /*! \brief Helper function for allocating complex fft buffers
+    /*! \brief Helper function for allocating complex* buffers
      */
-    gr_complex* malloc_complex(int size);
+    FFT_API gr_complex* malloc_complex(int size);
 
-    /*! \brief Helper function for allocating float fft buffers
+    /*! \brief Helper function for allocating float* buffers
      */
-    float* malloc_float(int size);
+    FFT_API float* malloc_float(int size);
     
+    /*! \brief Helper function for allocating double* buffers
+     */
+    FFT_API double* malloc_double(int size);
+
     /*! \brief Helper function for freeing fft buffers
      */
-    void free(void *b);
+    FFT_API void free(void *b);
 
     /*!
      * \brief Export reference to planner mutex for those apps that

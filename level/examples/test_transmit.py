@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# python ~/workspace/level_basestation/pre-cog/examples/simple_trx.py --port 12345 --radio-addr 85 --dest-addr 86 --args serial=E8R10Z2B1
+# python ~/workspace/level_basestation/pre-cog/examples/simple_trx.py --port 12346 --radio-addr 86 --dest-addr 85 --args serial=E4R11Y0B1
+
 from gnuradio import gr
 from gnuradio import uhd
 from gnuradio import digital
@@ -10,7 +13,6 @@ from gnuradio import level
 from gnuradio import extras
 from math import pi
 from gruel import pmt
-from threading import Thread
 import time
 
 tx = None
@@ -46,16 +48,11 @@ class test_transmit(gr.top_block):
             samples_per_symbol=2,
             bt=0.3
         )
+        # BDMV: 13668648
+        # FOF : 13021386
 
-        #self.b_to_s = extras.blob_to_stream(1)
-        #self.blob = extras.pmt_make_blob(8)
-
-        #self.extras_socket_to_blob = extras.socket_to_blob("TCP", "127.0.0.1", "12345", 0)
-        #self.extras_blob_to_stream = extras.blob_to_stream(1)
-
-        #msgs = ("this", "test", "should", "pass")
-        tb = gr.top_block()
-
+        # FOF : 85013021385
+        # BDMV: 8513668648
         # Connections
         self.connect(self.msg_src, self.msk, self.uhd_sink)
 
@@ -72,22 +69,8 @@ class test_transmit(gr.top_block):
             time.sleep(1)
             print self.msgq.count()
 
-class worker(Thread):
-    def run(self):
-        for x in xrange(5):
-            tx.send_pkt("a")
-            print tx.msgq.count()
-            time.sleep(1)
-        tx.send_pkt(eof=True)
-        time.sleep(5)
-        tx.send_pkt("a")
-        tx.send_pkt(eof=True)
-        time.sleep(5)
-
 if __name__ == '__main__':
-    global tx
     tx = test_transmit()
-    #r = gr.enable_realtime_scheduling()
+    r = gr.enable_realtime_scheduling()
     tx.start()
-    worker().start()
-    #tx.main_loop()
+    tx.main_loop()

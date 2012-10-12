@@ -22,6 +22,7 @@
 import numpy
 from math import pi
 from gnuradio import gr
+from gnuradio import digital
 from gruel import pmt
 from gnuradio.digital import packet_utils
 import gnuradio.digital as gr_digital
@@ -72,74 +73,29 @@ class packet_framer(gr.block):
             raise ValueError, "Invalid access_code %r. Must be string of 1's and 0's" % (access_code,)
         self._access_code = access_code
         self._pkt = []
-        self.more_frame_cnt = 0
-        self.keep = False
 
     def work(self, input_items, output_items):
         while not len(self._pkt):
             try: msg = self.pop_msg_queue()
             except: return -1
-            if not pmt.pmt_is_blob(msg.value): 
-                self.tx_time,data,self.more_frame_cnt = pmt.to_python(msg.value)
-                self.has_tx_time = True
-                #print data
-                #print tx_time
-                #print data.tostring()
-            else:
-                data = pmt.pmt_blob_data(msg.value)
-                #print data
-                self.has_tx_time = False
-            
-                
+            if not pmt.pmt_is_blob(msg.value): continue
             pkt = packet_utils.make_packet(
-                data.tostring(),
+                pmt.pmt_blob_data(msg.value).tostring(),
                 self._samples_per_symbol,
                 self._bits_per_symbol,
                 self._access_code,
                 False, #pad_for_usrp,
                 self._whitener_offset,
-                )
+            )
             self._pkt = numpy.fromstring(pkt, numpy.uint8)
             if self._use_whitener_offset:
                 self._whitener_offset = (self._whitener_offset + 1) % 16
 
-            #shouldn't really need to send start of burst
-            #only need to do sob if looking for timed transactions
+        num_items = min(len(self._pkt), len(output_items[0]))
+        output_items[0][:num_items] = self._pkt[:num_items]
+        self._pkt = self._pkt[num_items:] #residue for next work()
+        return num_items
 
-            num_items = min(len(self._pkt), len(output_items[0]))
-            output_items[0][:num_items] = self._pkt[:num_items]
-            self._pkt = self._pkt[num_items:] #residue for next work()
-            
-            if len(self._pkt) == 0 :
-                item_index = num_items #which output item gets the tag?
-                offset = self.nitems_written(0) + item_index
-                source = pmt.pmt_string_to_symbol("framer")
-                
-                #print 'frame cnt',self.more_frame_cnt
-                
-                if self.has_tx_time:
-                    key = pmt.pmt_string_to_symbol("tx_sob")
-                    self.add_item_tag(0, self.nitems_written(0), key, pmt.PMT_T, source)
-                    key = pmt.pmt_string_to_symbol("tx_time")
-                    self.add_item_tag(0, self.nitems_written(0), key, pmt.from_python(self.tx_time), source)
-                    #if self.keep:
-                    #    print 'bad order'
-                    #self.keep = True
-
-                
-                if self.more_frame_cnt == 0:
-                    key = pmt.pmt_string_to_symbol("tx_eob")
-                    self.add_item_tag(0, offset - 1, key, pmt.PMT_T, source)
-                    #if self.keep:
-                    #    print 'good order'
-                    #self.keep = False
-                else:
-                    self.more_frame_cnt -= 1
-
- 
-                
-            return num_items
-        
 class packet_deframer(gr.hier_block2):
     """
     Hierarchical block for demodulating and deframing packets.
@@ -175,7 +131,7 @@ class packet_deframer(gr.hier_block2):
         msgq = gr.msg_queue(4)          # holds packets from the PHY
         self.correlator = gr_digital.correlate_access_code_bb(access_code, threshold)
 
-        self.framer_sink = gr.framer_sink_1(msgq)
+        self.framer_sink = digital.framer_sink_1(msgq)
         self.connect(self, self.correlator, self.framer_sink)
         self._queue_to_blob = _queue_to_blob(msgq)
         self.connect(self._queue_to_blob, self)
@@ -213,5 +169,4 @@ class _queue_to_blob(gr.block):
                 pmt.pmt_blob_rw_data(blob)[:] = payload
                 self.post_msg(0, pmt.pmt_string_to_symbol("ok"), blob)
             else:
-                a = 0
-
+                self.post_msg(0, pmt.pmt_string_to_symbol("fail"), pmt.PMT_NIL)

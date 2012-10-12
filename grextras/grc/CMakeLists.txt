@@ -37,7 +37,6 @@ list(APPEND grc_sources
     extras_delay.xml
     extras_multiply_const.xml
     extras_noise_source.xml
-    extras_decim_fir.xml
     extras_blob_to_socket.xml
     extras_blob_to_stream.xml
     extras_socket_to_blob.xml
@@ -49,17 +48,6 @@ list(APPEND grc_sources
     extras_pmt_rpc.xml
     extras_msg_many_to_one.xml
     extras_socket_msg.xml
-    extras_transition_detect.xml
-    extras_msg_to_stdout.xml
-    simple_mac.xml
-    extras_append_key.xml
-    heart_beat.xml
-    burst_gate.xml
-    channel_access_controller.xml
-    tdma_engine.xml
-    virtual_channel_formatter.xml
-    virtual_channel_mux.xml
-    virtual_channel_demux.xml
 )
 
 install(

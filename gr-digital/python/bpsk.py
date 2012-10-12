@@ -28,21 +28,15 @@ from cmath import exp
 
 from gnuradio import gr
 from gnuradio.digital.generic_mod_demod import generic_mod, generic_demod
+from gnuradio.digital.generic_mod_demod import shared_mod_args, shared_demod_args
 import digital_swig
 import modulation_utils
-
-# Default number of points in constellation.
-_def_constellation_points = 2
-# Whether differential coding is used.
-_def_differential = False
 
 # /////////////////////////////////////////////////////////////////////////////
 #                           BPSK constellation
 # /////////////////////////////////////////////////////////////////////////////
 
-def bpsk_constellation(m=_def_constellation_points):
-    if m != _def_constellation_points:
-        raise ValueError("BPSK can only have 2 constellation points.")
+def bpsk_constellation():
     return digital_swig.constellation_bpsk()
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -50,115 +44,102 @@ def bpsk_constellation(m=_def_constellation_points):
 # /////////////////////////////////////////////////////////////////////////////
 
 class bpsk_mod(generic_mod):
+    """
+    Hierarchical block for RRC-filtered BPSK modulation.
+    
+    The input is a byte stream (unsigned char) and the
+    output is the complex modulated signal at baseband.
+    
+    
+    Args: 
+        mod_code: Argument is not used.  It exists purely to simplify generation of the block in grc.
+        differential: Whether to use differential encoding (boolean).
+    """
+    # See generic_mod for additional arguments
+    __doc__ += shared_mod_args
 
-    def __init__(self, constellation_points=_def_constellation_points,
-                 differential=False, *args, **kwargs):
+    def __init__(self, mod_code=None, differential=False, *args, **kwargs):
 
-        """
-	Hierarchical block for RRC-filtered BPSK modulation.
-
-	The input is a byte stream (unsigned char) and the
-	output is the complex modulated signal at baseband.
-
-        See generic_mod block for list of parameters.
-	"""
-
-        constellation_points = _def_constellation_points
         constellation = digital_swig.constellation_bpsk()
-        if constellation_points != 2:
-            raise ValueError('Number of constellation points must be 2 for BPSK.')
         super(bpsk_mod, self).__init__(constellation=constellation,
                                        differential=differential, *args, **kwargs)
-        
+
+
 # /////////////////////////////////////////////////////////////////////////////
 #                           BPSK demodulator
 #
 # /////////////////////////////////////////////////////////////////////////////
 
 class bpsk_demod(generic_demod):
+    """
+    Hierarchical block for RRC-filtered BPSK modulation.
+    
+    The input is a byte stream (unsigned char) and the
+    output is the complex modulated signal at baseband.
 
-    def __init__(self, constellation_points=_def_constellation_points,
-                 differential=False, *args, **kwargs):
+    Args: 
+        mod_code: Argument is not used.  It exists purely to simplify generation of the block in grc.
+        differential: whether to use differential encoding (boolean)                  
+    """
+    # See generic_demod for additional arguments
+    __doc__ += shared_demod_args
 
-        """
-	Hierarchical block for RRC-filtered BPSK modulation.
-
-	The input is a byte stream (unsigned char) and the
-	output is the complex modulated signal at baseband.
-
-        See generic_demod block for list of parameters.
-        """
-
-        constellation_points = _def_constellation_points
+    def __init__(self, mod_code=None, differential=False, *args, **kwargs):
         constellation = digital_swig.constellation_bpsk()
-        if constellation_points != 2:
-            raise ValueError('Number of constellation points must be 2 for BPSK.')
         super(bpsk_demod, self).__init__(constellation=constellation,
                                          differential=differential, *args, **kwargs)
-
+#bpsk_demod.__doc__ += shared_demod_args
 
 
 # /////////////////////////////////////////////////////////////////////////////
 #                           DBPSK constellation
 # /////////////////////////////////////////////////////////////////////////////
 
-def dbpsk_constellation(m=_def_constellation_points):
-    if m != _def_constellation_points:
-        raise ValueError("DBPSK can only have 2 constellation points.")
+def dbpsk_constellation():
     return digital_swig.constellation_dbpsk()
 
 # /////////////////////////////////////////////////////////////////////////////
 #                           DBPSK modulator
 # /////////////////////////////////////////////////////////////////////////////
 
-class dbpsk_mod(generic_mod):
+class dbpsk_mod(bpsk_mod):
+    """
+    Hierarchical block for RRC-filtered DBPSK modulation.
+    
+    The input is a byte stream (unsigned char) and the
+    output is the complex modulated signal at baseband.
+    
+    Args: 
+        mod_code: Argument is not used.  It exists purely to simplify generation of the block in grc.
+    """
+    # See generic_mod for additional arguments
+    __doc__ += shared_mod_args
 
-    def __init__(self, constellation_points=_def_constellation_points,
-                 differential=True, *args, **kwargs):
+    def __init__(self, mod_code=None, *args, **kwargs):
 
-        """
-	Hierarchical block for RRC-filtered DBPSK modulation.
-
-	The input is a byte stream (unsigned char) and the
-	output is the complex modulated signal at baseband.
-
-        See generic_mod block for list of parameters.
-	"""
-
-        constellation_points = _def_constellation_points
-        constellation = digital_swig.constellation_bpsk()
-        if constellation_points != 2:
-            raise ValueError('Number of constellation points must be 2 for DBPSK.')
-        super(dbpsk_mod, self).__init__(constellation=constellation,
-                                        differential=True,
-                                        *args, **kwargs)
+        super(dbpsk_mod, self).__init__(*args, **kwargs)
 
 # /////////////////////////////////////////////////////////////////////////////
 #                           DBPSK demodulator
 #
 # /////////////////////////////////////////////////////////////////////////////
 
-class dbpsk_demod(generic_demod):
+class dbpsk_demod(bpsk_demod):
+    """
+    Hierarchical block for RRC-filtered DBPSK modulation.
+    
+    The input is a byte stream (unsigned char) and the
+    output is the complex modulated signal at baseband.
+    
+    Args: 
+        mod_code: Argument is not used.  It exists purely to simplify generation of the block in grc.
+    """
+    # See generic_demod for additional arguments
+    __doc__ += shared_demod_args
 
-    def __init__(self, constellation_points=_def_constellation_points,
-                 differential=True, *args, **kwargs):
+    def __init__(self, mod_code=None, *args, **kwargs):
 
-        """
-	Hierarchical block for RRC-filtered DBPSK modulation.
-
-	The input is a byte stream (unsigned char) and the
-	output is the complex modulated signal at baseband.
-
-        See generic_demod block for list of parameters.
-        """
-
-        constellation_points = _def_constellation_points
-        constellation = digital_swig.constellation_bpsk()
-        if constellation_points != 2:
-            raise ValueError('Number of constellation points must be 2 for DBPSK.')
-        super(dbpsk_demod, self).__init__(constellation=constellation,
-                                          differential=True,
-                                          *args, **kwargs)
+        super(dbpsk_demod, self).__init__(*args, **kwargs)
 
 #
 # Add these to the mod/demod registry

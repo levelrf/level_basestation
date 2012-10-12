@@ -60,10 +60,16 @@ class uhd_usrp_source;
  *
  * The following tag keys will be produced by the work function:
  *  - pmt::pmt_string_to_symbol("rx_time")
+ *  - pmt::pmt_string_to_symbol("rx_rate")
+ *  - pmt::pmt_string_to_symbol("rx_freq")
  *
  * The timstamp tag value is a pmt tuple of the following:
  * (uint64 seconds, and double fractional seconds).
  * A timestamp tag is produced at start() and after overflows.
+ *
+ * The sample rate and center frequency tags are doubles,
+ * representing the sample rate in Sps and frequency in Hz.
+ * These tags are produced upon the user changing parameters.
  *
  * See the UHD manual for more detailed documentation:
  * http://code.ettus.com/redmine/ettus/projects/uhd/wiki
@@ -121,6 +127,19 @@ public:
      * \param time the absolute time for reception to begin
      */
     virtual void set_start_time(const uhd::time_spec_t &time) = 0;
+
+    /*!
+     * *Advanced use only:*
+     * Issue a stream command to all channels in this source block.
+     *
+     * This method is intended to override the default "always on" behavior.
+     * After starting the flow graph, the user should call stop() on this block,
+     * then issue any desired arbitrary stream_cmd_t structs to the device.
+     * The USRP will be able to enqueue several stream commands in the FPGA.
+     *
+     * \param cmd the stream command to issue to all source channels
+     */
+    virtual void issue_stream_cmd(const uhd::stream_cmd_t &cmd) = 0;
 
     /*!
      * Returns identifying information about this USRP's configuration.
