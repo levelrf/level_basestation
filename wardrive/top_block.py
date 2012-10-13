@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Top Block
-# Generated: Thu Oct 11 18:37:37 2012
+# Generated: Fri Oct 12 17:25:13 2012
 ##################################################
 
 from gnuradio import eng_notation
@@ -39,7 +39,7 @@ class top_block(grc_wxgui.top_block_gui):
 		)
 		self.uhd_usrp_sink_0.set_samp_rate(samp_rate)
 		self.uhd_usrp_sink_0.set_center_freq(521e6, 0)
-		self.uhd_usrp_sink_0.set_gain(0, 0)
+		self.uhd_usrp_sink_0.set_gain(25, 0)
 		self.uhd_usrp_sink_0.set_bandwidth(50e3, 0)
 		self.extras_signal_source_0 = gr_extras.signal_source_fc32()
 		self.extras_signal_source_0.set_waveform("COSINE")

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ASCII'?>
 <flow_graph>
-  <timestamp>Thu Oct 11 18:31:09 2012</timestamp>
+  <timestamp>Thu Oct 11 20:08:44 2012</timestamp>
   <block>
     <key>options</key>
     <param>
@@ -274,7 +274,7 @@
     </param>
     <param>
       <key>gain0</key>
-      <value>0</value>
+      <value>25</value>
     </param>
     <param>
       <key>ant0</key>
