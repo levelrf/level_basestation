@@ -3,9 +3,17 @@
 #
 #To do: visualize ranked spectrum results (pyplot)
 
+#########
+#This file scans the spectrum and does two things: it looks for incumbents and does power level analysis to rank spectrum chunks according to how attractive they are for use, and it checks to see if any incumbents it sees are really clients trying to connect, in which case it passes them off to be authenticated and connected.
+#########
+
+
 from gnuradio import gr, eng_notation, window, digital
 from gnuradio import audio
 from gnuradio import uhd
+from gnuradio import blks2
+from gnuradio.gr import firdes
+import msk
 from gnuradio.eng_option import eng_option
 from optparse import OptionParser
 from matplotlib import pyplot
@@ -17,7 +25,7 @@ import threading
 import numpy
 import time
 import urllib2
-#import antigravity
+import re
 
 try:
     import scipy
@@ -86,104 +94,6 @@ class parse_msg(object):
 
 
 class my_top_block(gr.top_block):
-    def online_skewness(data, alpha):
-	n = 0
-	mean = 0
-	M2 = 0
-	M3 = 0
-	d_M3 = 0
-
-	for n in xrange(len(data)):
-	    delta = data[n] - mean
-	    delta_n = delta / (n+1)
-	    term1 = delta * delta_n * (n)
-	    mean = mean + delta_n
-	    M3 = term1 * delta_n * (n - 1) -3 * delta_n * M2
-	    M2 = M2 + term1
-	    d_M3 = (0.001)*M3 + (1-0.001)*d_M3;
-	return d_M3
-
-    def snr_est_simple(signal):
-	y1 = scipy.mean(abs(signal))
-	y2 = scipy.real(scipy.mean(signal**2))
-	y3 = (y1*y1 - y2)
-	snr_rat = y1*y1/y3
-	return 10.0*scipy.log10(snr_rat), snr_rat
-
-    def snr_est_skew(signal):
-	y1 = scipy.mean(abs(signal))
-	y2 = scipy.mean(scipy.real(signal**2))
-	y3 = (y1*y1 - y2)
-	y4 = online_skewness(abs(signal.real), 0.001)
-	skw = y4*y4 / (y2*y2*y2);
-	snr_rat = y1*y1 / (y3 + skw*y1*y1)
-	return 10.0*scipy.log10(snr_rat), snr_rat
- 
-    def snr_est_m2m4(signal):
-	M2 = scipy.mean(abs(signal)**2)
-	M4 = scipy.mean(abs(signal)**4)
-	snr_rat = 2*scipy.sqrt(2*M2*M2 - M4) / (M2 - scipy.sqrt(2*M2*M2 - M4))
-	return 10.0*scipy.log10(snr_rat), snr_rat
-
-    def snr_est_svr(signal):
-	N = len(signal)
-	ssum = 0
-	msum = 0
-	for i in xrange(1, N):
-	    ssum += (abs(signal[i])**2)*(abs(signal[i-1])**2)
-	    msum += (abs(signal[i])**4)
-	savg = (1.0/(float(N)-1.0))*ssum
-	mavg = (1.0/(float(N)-1.0))*msum
-	beta = savg / (mavg - savg)
-	snr_rat = 2*((beta -1) + scipy.sqrt(beta*(beta-1)))
-	return 10.0*scipy.log10(snr_rat), snr_rat
-
-    def weighted_incremental_variance(dataWeightPairs):
-	sumweight = 0
-	mean = 0
-	M2 = 0
-	for x, weight in dataWeightPairs:
-	    temp = weight + sumweight
-	    delta = x - mean
-	    R = delta * weight / temp
-	    mean = mean + R
-	    M2 = M2 + sumweight * delta * R
-	    sumweight = temp
-	variance_n = M2/sumweight
-	variance = variance_n * len(dataWeightPairs)/(len(dataWeightPairs) -1)
-	return variance
-
-    def online_kurtosis(data):
-	n = 0
-	mean = 0
-	M2 = 0
-	M3 = 0
-	M4 = 0
-
-	for x in data:
-	    n1 = n
-	    n = n + 1
-	    delta = x - mean
-	    delta_n = delta / n
-	    delta_n2 = delta_n * delta_n
-	    term1 = delta * delta_n * delta_n
-	    mean = mean + delta_n
-	    M4 = M4 + term1 * delta_n2 * (n*n - 3*n +3) + 6 * delta_n2 * M2 -4 * delta_n * M3
-	    M3 = M3 + term1 * delta_n * (n - 2) -3 * delta_n * M2
-	    M2 = M2 + term1
-	
-	kurtosis = (n*M4) / (M2*M2) -3
-	return kurtosis
-
-    gr_estimators = {"simple": digital.SNR_EST_SIMPLE,
-		     "skew": digital.SNR_EST_SKEW,
-		     "m2m4": digital.SNR_EST_M2M4,
-		     "svr": digital.SNR_EST_SVR}
-    py_estimators = {"simple": snr_est_simple,
-		     "skew": snr_est_m2m4,
-		     "m2m4": snr_est_m2m4,
-		     "svr": snr_est_svr}
-
 
     def __init__(self):
         gr.top_block.__init__(self)
@@ -216,16 +126,7 @@ class my_top_block(gr.top_block):
 			  help="Percentage of chunk that is unique [default=%default]")
 	parser.add_option("-N", "--nsamples", type="int", default=10000,
 			  help="Set the number of samples to process [default=%default]")
-	parser.add_option("", "--snr-min", type="float", default=-5,
-			  help="Minimum SNR [default=%default]")
-	parser.add_option("", "--snr-max", type="float", default=20,
-			  help="Maximum SNR [default=%default]")
-	parser.add_option("", "--snr-step", type="float", default=0.5,
-			  help="SNR step amount [default=%default]")
-	parser.add_option("-t", "--type", type="choice",
-			  choices=my_top_block.gr_estimators.keys(), default="simple",
-			  help="Estimator type {0} [default=%default]".format(
-				my_top_block.gr_estimators.keys()))
+	
         (options, args) = parser.parse_args()
         if len(args) != 2:
            parser.print_help()
@@ -345,7 +246,7 @@ class my_top_block(gr.top_block):
     
 
 def main_loop(tb):
-
+#Each chunk is 8MHz, but 12.5% of each side is thrown away to reduce downconverter nonlinearity.
     def qsortr(list): #Use quick sort to rank the list of best channels
 	return [] if list==[] else qsortr([x for x in list[1:] if x < list[0]]) + [list[0]] + qsortr([x for x in list[1:] if x >= list[0]])
     done = 0
@@ -375,7 +276,14 @@ def main_loop(tb):
 	print "Lowest power of this chunk is", best,	
 	print "dB at", m.center_freq,
 	print "Hz" 	
-#	print tb.min_freq		
+#	print tb.min_freq
+	#If this chunk is above a certain threshold, let's check to see if it's a client transmitting a beacon to join the network
+#	if (best > 80):
+		#demodulate and search for beacon here. We do that by looking for the preamble of a packet. Modulation is MSK.
+			    		
+#		if(isClient):
+			#Parse the packet here
+		#	add_client.add(m.center_freq	
 	avg = numpy.mean(m.data)
 	dev = numpy.std(m.data)
 	streak_lengths = []
@@ -395,17 +303,6 @@ def main_loop(tb):
 	print "Trimmed Average of this chunk: ",
 	print TrimmedAvg
 	chunk_score.append(((avg/avg_weight)**2 + (dev/dev_weight)**2 + (streakAvg/savg_weight)**2 + (TrimmedAvg/tavg_weight)**2)**0.5)
-#FIXME hack in the transmitter demo so that once the right frequency is picked, we can actually start
-#to transmit on it.
-
-#tab in everything one more time so I can get another block in that's not in the while loop	
-#FIXME plot spectrum showing where quality bandwidth is
-#	min = 500000000
-#	max = 550000000
-#	x = numpy.arange(min, max, 288);
-#	y = numpy.sin(x)
-#	pyplot.plot(x, y)
-#	pyplot.show()
        
 
         # m.data are the mag_squared of the fft output (they are in the
