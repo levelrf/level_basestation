@@ -1,3 +1,15 @@
+add_clients.py - Does everything required to add a client to the network. Adds them to the db, amongst other things.
+
+analytics.py - visualizes spectrum and client info for NOC dashboard
+
+get.py - Fetches data about clients and the basestation. Interfaces with the db.
+
+main.py - Launches transactions.py and spectrum_sense.py in seperate threads. Run this guy to start the base station.
+
+uhd_snr_reciever.py - from gnuradio, estimates SNR.
+
+transactions.py - handles actual data transfer between clients and the internet.
+
 assign_channels.py - Reassigns all clients to the best channel to minimize interference between all clients.
 
 get_channels.py - Looks up channel availabilty from Spectrum Bridge and then also does power level analysis by calling usrp_spectrum_sense.py.
