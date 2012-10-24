@@ -18,6 +18,15 @@ usrp_spectrum_sense.py - Does power level analysis on a given chunk of spectrum.
 
 config.py - Used for executing commands on clients (like changing their channel, bandwidth, etc)
 
-get.py - Used to get parameters about clients and the system 
+REMOVED: get.py - Used to get parameters about clients and the system 
 
 test_populate_db.py - Populates the database with some example data so you can experiment without needing real clients to connect
+
+
+
+
+
+
+
+spectrum_sense:
+We start out by querying Spectrum Bridge for open channels. Once we have those, we scan them to see if they really are free, and what incumbents there are. Then we rank the chunks by quality and put them in a list and store them in the db. We continully scan the spectrum, and every 24 hours we re-register for the channels we're using and check for updates to the db. 
