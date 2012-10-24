@@ -1,4 +1,5 @@
   steps for prepping base station server:
+(should eventually have all of this in a distro that we can install on new basestations)
 
 install ubuntu:
 username = level
@@ -32,3 +33,6 @@ sudo apt-get install mongodb-10gen
 sudo /etc/init.d/mongodb start
 
 pip install pymongo
+
+git clone https://github.com/levelrf/level_basestation.git
+
