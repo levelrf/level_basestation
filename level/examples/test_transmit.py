@@ -48,12 +48,8 @@ class test_transmit(gr.top_block):
             samples_per_symbol=2,
             bt=0.3
         )
-        # BDMV: 13668648
-        # FOF : 13021386
-
-        # FOF : 85013021385
-        # BDMV: 8513668648
-        # Connections
+        
+	# Connections
         self.connect(self.msg_src, self.msk, self.uhd_sink)
 
     def send_pkt(self, payload='', eof=False):
