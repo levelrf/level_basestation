@@ -31,7 +31,7 @@ class msk_demod_cf(gr.hier_block2):
         self.invert = gr.multiply_const_vff((-1, ))
 
         # TODO: this is hardcoded, how to figure out this value?
-        self.offset = gr.add_const_vff((-1.4, ))
+        self.offset = gr.add_const_vff((-1.2, ))
 
         # the clock recovery block tracks the symbol clock and resamples as needed.
         # the output of the block is a stream of soft symbols (float)
