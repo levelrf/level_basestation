@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import os, struct, time
+import os, struct, time, mmap
 from fcntl import ioctl
 
 # Linux specific...
@@ -18,11 +18,14 @@ def main():
     tun = os.open("/dev/net/tun", os.O_RDWR)
     ifs = ioctl(tun, TUNSETIFF, struct.pack("16sH", "lvl%d", mode))
     ifname = ifs[:16].strip("\x00")
-    print ifname
-    #os.system("sudo ifconfig 192.168.200.1 lvl0")
-    print "virtual interface created"
+    os.system("sudo ifconfig %s 192.168.200.1" % ifname)
+    print "virtual interface %s created" % ifname
     while True:
-    	#os.write(tun, "TEST")
+        m = mmap.mmap(-1, 1024 * 8) # create in RAM
+        s = 'x' * 1024 * 8
+        m.write(s)
+    	os.write(tun, m)
+        print "sent frame"
         time.sleep(1)
 
 if __name__ == '__main__':

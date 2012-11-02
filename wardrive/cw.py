@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 ##################################################
 # Gnuradio Python Flow Graph
-# Title: Top Block
-# Generated: Fri Oct 12 17:25:13 2012
+# Title: Cw
+# Generated: Fri Nov  2 15:30:03 2012
 ##################################################
 
 from gnuradio import eng_notation
@@ -15,12 +15,10 @@ from optparse import OptionParser
 import gnuradio.extras as gr_extras
 import wx
 
-class top_block(grc_wxgui.top_block_gui):
+class cw(grc_wxgui.top_block_gui):
 
 	def __init__(self):
-		grc_wxgui.top_block_gui.__init__(self, title="Top Block")
-		_icon_path = "/usr/share/icons/hicolor/32x32/apps/gnuradio-grc.png"
-		self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
+		grc_wxgui.top_block_gui.__init__(self, title="Cw")
 
 		##################################################
 		# Variables
@@ -38,7 +36,7 @@ class top_block(grc_wxgui.top_block_gui):
 			),
 		)
 		self.uhd_usrp_sink_0.set_samp_rate(samp_rate)
-		self.uhd_usrp_sink_0.set_center_freq(521e6, 0)
+		self.uhd_usrp_sink_0.set_center_freq(520e6, 0)
 		self.uhd_usrp_sink_0.set_gain(25, 0)
 		self.uhd_usrp_sink_0.set_bandwidth(50e3, 0)
 		self.extras_signal_source_0 = gr_extras.signal_source_fc32()
@@ -65,6 +63,6 @@ class top_block(grc_wxgui.top_block_gui):
 if __name__ == '__main__':
 	parser = OptionParser(option_class=eng_option, usage="%prog: [options]")
 	(options, args) = parser.parse_args()
-	tb = top_block()
+	tb = cw()
 	tb.Run(True)
 
