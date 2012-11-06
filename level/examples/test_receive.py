@@ -8,7 +8,7 @@ from gnuradio.gr import firdes
 from gnuradio import level
 from math import pi
 
-class fsk_rx(gr.top_block):
+class msk_rx(gr.top_block):
     def __init__(self):
         gr.top_block.__init__(self, "CC1101 Burst Detector")
 
@@ -46,7 +46,7 @@ class fsk_rx(gr.top_block):
         self.connect(self.uhd_src, self.packet_receiver)
 
 if __name__ == '__main__':
-    rx = fsk_rx()
+    rx = msk_rx()
     r = gr.enable_realtime_scheduling()
     rx.start()
     raw_input('Press Enter to quit: ')

@@ -34,7 +34,7 @@ class cc1k_demod_pkts(gr.hier_block2):
             gr.io_signature(0, 0, 0))                    # Output signature
 
         if preamble is None:
-            preamble = chr(0b10101010) + chr(0b10101010) + chr(0b10101010) + chr(0b10101010)
+            preamble = chr(0b01010101) + chr(0b01010101) + chr(0b01010101) + chr(0b01010101)
         self._preamble = preamble
 
         self._rcvd_pktq = gr.msg_queue()          # holds packets from the PHY
@@ -68,3 +68,4 @@ class _queue_watcher_thread(_threading.Thread):
             payload = msg.to_string()
             print "received packet "
             print payload.encode("hex")
+            print payload.encode("ascii")

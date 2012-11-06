@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Uhd Snr Receiver
-# Generated: Fri Oct  5 10:13:32 2012
+# Generated: Fri Nov  2 15:27:51 2012
 ##################################################
 
 from PyQt4 import Qt
@@ -50,7 +50,7 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self.samp_rate = samp_rate = 1e6
 		self.rrc_taps = rrc_taps = filter.firdes.root_raised_cosine(nfilts, nfilts, 1.0/float(sps), 0.35, 11*sps*nfilts)
 		self.gain = gain = 15
-		self.freq = freq = 431e6
+		self.freq = freq = 520e6
 		self.fine_freq = fine_freq = -28400
 
 		##################################################
@@ -78,13 +78,13 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self._freq_layout.addWidget(self._freq_tool_bar)
 		self._freq_tool_bar.addWidget(Qt.QLabel("Frequency"+": "))
 		self._freq_counter = Qwt.QwtCounter()
-		self._freq_counter.setRange(400e6, 500e6, 1e6)
+		self._freq_counter.setRange(514e6, 526e6, 1e6)
 		self._freq_counter.setNumButtons(2)
 		self._freq_counter.setValue(self.freq)
 		self._freq_tool_bar.addWidget(self._freq_counter)
 		self._freq_counter.valueChanged.connect(self.set_freq)
 		self._freq_slider = Qwt.QwtSlider(None, Qt.Qt.Horizontal, Qwt.QwtSlider.BottomScale, Qwt.QwtSlider.BgSlot)
-		self._freq_slider.setRange(400e6, 500e6, 1e6)
+		self._freq_slider.setRange(514e6, 526e6, 1e6)
 		self._freq_slider.setValue(self.freq)
 		self._freq_slider.setMinimumWidth(200)
 		self._freq_slider.valueChanged.connect(self.set_freq)
@@ -118,7 +118,7 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self.uhd_usrp_source_0.set_center_freq(freq + fine_freq, 0)
 		self.uhd_usrp_source_0.set_gain(gain, 0)
 		self.uhd_usrp_source_0.set_antenna("TX/RX", 0)
-		self.qtgui_time_sink_x_0_0 = qtgui.time_sink_f(
+		self.qtgui_time_sink_x_0_0 = qtgui.time_sink_c(
 			500, #size
 			samp_rate, #bw
 			"QT GUI Plot", #name
@@ -143,9 +143,6 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		)
 		self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.pyqwidget(), Qt.QWidget)
 		self.top_grid_layout.addWidget(self._qtgui_const_sink_x_0_win, 0,1,1,1)
-		self.gr_null_sink_0_1 = gr.null_sink(gr.sizeof_gr_complex*1)
-		self.gr_null_sink_0_0 = gr.null_sink(gr.sizeof_gr_complex*1)
-		self.gr_null_sink_0 = gr.null_sink(gr.sizeof_gr_complex*1)
 		self.gr_multiply_xx_0 = gr.multiply_vcc(1)
 		self.gr_agc2_xx_0 = gr.agc2_cc(1e-1, 1e-2, 1.0, 1.0, 0.0)
 		self.digital_pfb_clock_sync_xxx_0 = digital.pfb_clock_sync_ccf(sps, 2*3.14/100.0, (rrc_taps), nfilts, nfilts/2, 1.5, 1)
@@ -158,8 +155,6 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		##################################################
 		# Connections
 		##################################################
-		self.connect((self.digital_mpsk_snr_est_cc_0, 0), (self.gr_null_sink_0, 0))
-		self.connect((self.digital_mpsk_snr_est_cc_0, 1), (self.qtgui_time_sink_x_0_0, 0))
 		self.connect((self.digital_pfb_clock_sync_xxx_0, 0), (self.digital_mpsk_snr_est_cc_0, 0))
 		self.connect((self.gr_multiply_xx_0, 0), (self.qtgui_freq_sink_x_0, 0))
 		self.connect((self.digital_lms_dd_equalizer_cc_0, 0), (self.qtgui_const_sink_x_0, 1))
@@ -174,10 +169,9 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self.connect((self.uhd_usrp_source_0, 0), (self.gr_agc2_xx_0, 0))
 		self.connect((self.digital_pfb_clock_sync_xxx_0, 0), (self.digital_mpsk_snr_est_cc_0_0, 0))
 		self.connect((self.digital_pfb_clock_sync_xxx_0, 0), (self.digital_mpsk_snr_est_cc_0_1, 0))
-		self.connect((self.digital_mpsk_snr_est_cc_0_1, 0), (self.gr_null_sink_0_1, 0))
-		self.connect((self.digital_mpsk_snr_est_cc_0_0, 0), (self.gr_null_sink_0_0, 0))
-		self.connect((self.digital_mpsk_snr_est_cc_0_0, 1), (self.qtgui_time_sink_x_0_0, 1))
-		self.connect((self.digital_mpsk_snr_est_cc_0_1, 1), (self.qtgui_time_sink_x_0_0, 2))
+		self.connect((self.digital_mpsk_snr_est_cc_0, 0), (self.qtgui_time_sink_x_0_0, 0))
+		self.connect((self.digital_mpsk_snr_est_cc_0_0, 0), (self.qtgui_time_sink_x_0_0, 1))
+		self.connect((self.digital_mpsk_snr_est_cc_0_1, 0), (self.qtgui_time_sink_x_0_0, 2))
 
 # QT sink close method reimplementation
 	def closeEvent(self, event):
@@ -228,9 +222,9 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 
 	def set_freq(self, freq):
 		self.freq = freq
+		self.uhd_usrp_source_0.set_center_freq(self.freq + self.fine_freq, 0)
 		self._freq_counter.setValue(self.freq)
 		self._freq_slider.setValue(self.freq)
-		self.uhd_usrp_source_0.set_center_freq(self.freq + self.fine_freq, 0)
 
 	def get_fine_freq(self):
 		return self.fine_freq

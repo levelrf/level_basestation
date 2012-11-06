@@ -14,7 +14,7 @@
 #include <cstring>
 #include <gr_count_bits.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 // just for debug printing
 char tmp[FMT_BUF_SIZE];
