@@ -2,7 +2,7 @@ include(GrPython)
 
 GR_PYTHON_INSTALL(
     PROGRAMS
-    demo.py
+    hn_demo.py
     fsk_demod_dev.py
     msk_demod_dev.py
 	test_receive.py

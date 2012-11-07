@@ -229,6 +229,8 @@ add_subdirectory(gnuradio-core)
 
 add_subdirectory(grc)
 
+include(grextras/SubProj.cmake)
+
 add_subdirectory(gr-fft)
 add_subdirectory(gr-filter)
 add_subdirectory(gr-digital)

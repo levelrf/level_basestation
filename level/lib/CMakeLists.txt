@@ -14,7 +14,8 @@ link_directories(${Boost_LIBRARY_DIRS})
 # Setup library
 ########################################################################
 list(APPEND level_sources
-  level_packet_sink.cc
+    cc430_crc.c
+    level_packet_sink.cc
 )
 
 list(APPEND level_libs

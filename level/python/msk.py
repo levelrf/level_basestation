@@ -1,6 +1,8 @@
 from gnuradio import gr
 from gnuradio import digital
+from gnuradio import filter
 from math import pi
+import numpy
 
 class msk_demod_cf(gr.hier_block2):
     def __init__(self):
@@ -42,3 +44,36 @@ class msk_demod_cf(gr.hier_block2):
         self.slicer = digital.binary_slicer_fb()
 
         self.connect(self, self.fmdemod, self.invert, self.clock_recovery, self.offset, self)
+
+class msk_mod_bc(gr.hier_block2):
+    def __init__(self, bt = 0.3, samples_per_symbol = 2):
+        gr.hier_block2.__init__(self, "msk_demod",
+                gr.io_signature(1, 1, gr.sizeof_char),
+                gr.io_signature(1, 1, gr.sizeof_gr_complex))
+
+        ntaps = 4 * samples_per_symbol              # up to 3 bits in filter at once
+        sensitivity = (pi / 2) / samples_per_symbol # phase change per bit = pi / 2
+
+        # Turn it into NRZ data.
+        self.unpack = gr.packed_to_unpacked_bb(1, gr.GR_MSB_FIRST)
+        self.nrz = digital.chunks_to_symbols_bf([-1, 1], 1) # note could also invert bits here
+
+        # Form Gaussian filter
+        # Generate Gaussian response (Needs to be convolved with window below).
+        self.gaussian_taps = gr.firdes.gaussian(1, samples_per_symbol, bt, ntaps)
+
+        self.sqwave = (1,) * samples_per_symbol       # rectangular window
+        self.taps = numpy.convolve(numpy.array(self.gaussian_taps),numpy.array(self.sqwave))
+        self.gaussian_filter = filter.interp_fir_filter_fff(samples_per_symbol, self.taps)
+
+        # FM modulation
+        self.fmmod = gr.frequency_modulator_fc(sensitivity)
+
+        # TODO: this is hardcoded, how to figure out this value?
+        self.offset = gr.add_const_vff((-.5, ))
+
+        # CC430 RF core is inverted with respect to USRP for some reason
+        self.invert = gr.multiply_const_vff((-1, ))
+
+        # Connect & Initialize base class
+        self.connect(self, self.unpack, self.nrz, self.invert, self.offset, self.gaussian_filter, self.fmmod, self)

@@ -1,4 +1,4 @@
-  steps for prepping base station server:
+steps for prepping base station server:
 (should eventually have all of this in a distro that we can install on new basestations)
 
 install ubuntu:
@@ -15,9 +15,28 @@ then add this job:
 make sure updateip.sh is in the correct folder
 touch ip.txt and add 0.0.0.0
 
-
 so this will check the current external IP every hour and if it's changed, it will email my levelrf account and with the subject being the hostname and the message body being the new ip
 
+installing gnuradio prereqs:
+sudo apt-get -y install git-core autoconf automake  libtool g++ python-dev swig \
+pkg-config libboost-all-dev libfftw3-dev libcppunit-dev libgsl0-dev \
+libusb-dev sdcc libsdl1.2-dev python-wxgtk2.8 python-numpy \
+python-cheetah python-lxml doxygen python-qt4 python-qwt5-qt4 libxi-dev \
+libqt4-opengl-dev libqwt5-qt4-dev libfontconfig1-dev libxrender-dev 
+
+installing additional level prereqs:
+sudo apt-get -y install python-setuptools
+sudo easy_install crcmod
+
+checkout our gnuradio fork:
+git clone https://github.com/levelrf/level_basestation.git=
+
+config and build 
+cd level_basestation
+mkdir build
+cd build
+cmake ../
+make
 
 Installing MongoDB:
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
@@ -34,5 +53,4 @@ sudo /etc/init.d/mongodb start
 
 pip install pymongo
 
-git clone https://github.com/levelrf/level_basestation.git
 
