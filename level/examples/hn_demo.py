@@ -12,7 +12,7 @@ from gnuradio import level
 from gnuradio import extras
 from math import pi
 from gruel import pmt
-import urllib2, time, json, operator, binascii
+import urllib2, time, json, operator, binascii, sys
 import crcmod
 
 crc16_func = crcmod.mkCrcFun(0x18005, initCrc=0xFFFF, rev=False)
@@ -69,9 +69,9 @@ class test_transmit(gr.top_block):
         try:
             f_page = urllib2.urlopen("http://api.ihackernews.com/page").read()
         except urllib2.HTTPError:
-            return "HN returned server error: 0"
+            sys.exit("HN returned server error: 0")
         fj = json.loads(f_page)
-        title = fj['items'][0]['title'][1:-1]
+        title = fj['items'][0]['title'][:50]
         score = fj['items'][0]['points']
         return str(title) + " : " + str(score)
 
@@ -80,22 +80,25 @@ class test_transmit(gr.top_block):
         crc = crc16_func(chr(length) + payload)
         
         packet =  chr(0x00)							   # guard
-        packet =  chr(0xAA)*4                          # preamble
+        packet += chr(0xAA)*4                          # preamble
         packet += chr(0xD3) + chr(0x91)                # sync
         packet += chr(length)                          # length
         packet += payload
-        packet += chr(crc >> 8) + chr(crc & 0xff)      # crc, sorry for bit hackery
-        packet += chr(0xAA)							   # guard
+        packet += chr(crc >> 8) + chr(crc & 0xFF)      # crc, sorry for bit hackery
+        packet += chr(0xFF) + chr(0x00)							   # guard
         return packet
 
     def main_loop(self, max_pkts):
+        payload = self.get_top_hn()
         while self.sent_pkts < max_pkts:
-            payload = chr(0x00) #self.get_top_hn()
+            if not self.sent_pkts % 100:
+                payload = self.get_top_hn()
             packet = self.form_packet(payload)
             self.send_pkt(packet)
             self.sent_pkts += 1
             try:
-                time.sleep(.1)
+                print payload
+                time.sleep(1)
                 pass
             except KeyboardInterrupt:
                 print "\n\nSent Packets:", self.sent_pkts, "\n"
