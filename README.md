@@ -24,12 +24,16 @@ libusb-dev sdcc libsdl1.2-dev python-wxgtk2.8 python-numpy \
 python-cheetah python-lxml doxygen python-qt4 python-qwt5-qt4 libxi-dev \
 libqt4-opengl-dev libqwt5-qt4-dev libfontconfig1-dev libxrender-dev 
 
+install uhd:
+sudo apt-get install libboost-all-dev libusb-1.0-0-dev python-cheetah doxygen python-docutils
+git clone git://code.ettus.com/ettus/uhd.git
+
 installing additional level prereqs:
-sudo apt-get -y install python-setuptools
+sudo apt-get -y install python-setuptools python-zmq
 sudo easy_install crcmod
 
 checkout our gnuradio fork:
-git clone https://github.com/levelrf/level_basestation.git=
+git clone https://github.com/levelrf/level_basestation.git
 
 config and build 
 cd level_basestation
