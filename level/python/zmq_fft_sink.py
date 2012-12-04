@@ -1,6 +1,6 @@
 from gnuradio import gr, fft, gru
-import math, json
-import zmq
+import math, json, sys
+import zmq, numpy
 
 class zmq_fft_sink_c(gr.hier_block2):
 	"""
@@ -16,7 +16,7 @@ class zmq_fft_sink_c(gr.hier_block2):
 		ref_level = 50,
 		sample_rate = 1,
 		fft_size = 512,
-		fft_rate = 30,
+		fft_rate = 20,
 		average = False,
 		avg_alpha = None,
 		title = '',
@@ -91,10 +91,16 @@ class input_watcher(gru.msgq_runner):
 
 	def handle_msg(self, msg):
 		self.count += 1
+		#convert to floating point numbers
+		print "test0"
+		try:
+			samples = numpy.fromstring(msg, numpy.float32)[:512] #only take first frame
+		except:
+			print sys.exc_info()
 		arr = map(ord, msg.to_string())
 		js = json.dumps({ 'fft': arr })
 		self.publisher.send(js)
-		print "sent message", self.count
+		#print "sent message", self.count
 
 
 # ----------------------------------------------------------------
@@ -115,8 +121,8 @@ class test_app_block(gr.top_block):
         noise = gr.noise_source_c(gr.GR_UNIFORM, 1.0/10)
 
         # Generate a complex sinusoid
-        #src1 = gr.sig_source_c (input_rate, gr.GR_SIN_WAVE, 2e3, 1)
-        src1 = gr.sig_source_c(input_rate, gr.GR_CONST_WAVE, 57.50e3, 1)
+        src1 = gr.sig_source_c (input_rate, gr.GR_SIN_WAVE, 2e3, 1)
+        #src1 = gr.sig_source_c(input_rate, gr.GR_CONST_WAVE, 57.50e3, 1)
 
         # We add these throttle blocks so that this demo doesn't
         # suck down all the CPU available.  Normally you wouldn't use these.
@@ -127,9 +133,9 @@ class test_app_block(gr.top_block):
                             ref_level=0, y_per_div=20, y_divs=10)
 
         combine1 = gr.add_cc()
-        self.connect(src1, (combine1, 0))
-        self.connect(noise,(combine1, 1))
-        self.connect(combine1, thr1, test_fft)
+        #self.connect(src1, (combine1, 0))
+        #self.connect(noise,(combine1, 1))
+        self.connect(src1, thr1, test_fft)
 
 def main ():
     app = test_app_block()
