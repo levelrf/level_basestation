@@ -17,9 +17,9 @@ class const_tx(gr.top_block):
 
         # Variables
         self.samp_rate = samp_rate = 125e3
-        self.f_center = f_center = 520e6
+        self.f_center = f_center = 510e6
         self.bandwidth = bandwidth = 200e3
-        self.gain = gain = 5
+        self.gain = gain = 25
 
         # Blocks
         self.uhd_sink = uhd.usrp_sink(

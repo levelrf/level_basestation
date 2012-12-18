@@ -100,7 +100,7 @@ level_packet_sink::work (int noutput_items,
 {
   float *inbuf = (float *) input_items[0];
   int count = 0;
-  d_threshold = 1;
+  d_threshold = 3;
   
   //if (VERBOSE)
   //  fprintf(stderr, ">>> Entering state machine\n"), fflush(stderr);
@@ -174,7 +174,7 @@ level_packet_sink::work (int noutput_items,
           if(d_midamble_count++ >= 7){
             if(VERBOSE)
               fprintf(stderr,"Decoded Payload Size: %s\n", binary_fmt(d_mid_reg, tmp)), fflush(stderr);
-            d_packet_length = d_mid_reg;
+            d_packet_length = 32;//d_mid_reg;
             enter_decode_packet();
             break;
           }

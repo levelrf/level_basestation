@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Uhd Snr Receiver
-# Generated: Fri Nov  2 15:27:51 2012
+# Generated: Tue Dec 18 03:05:38 2012
 ##################################################
 
 from PyQt4 import Qt
@@ -14,6 +14,7 @@ from gnuradio import qtgui
 from gnuradio import uhd
 from gnuradio.eng_option import eng_option
 from gnuradio.gr import firdes
+from gnuradio.wxgui import scopesink2
 from optparse import OptionParser
 import PyQt4.Qwt5 as Qwt
 import sip
@@ -50,7 +51,7 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self.samp_rate = samp_rate = 1e6
 		self.rrc_taps = rrc_taps = filter.firdes.root_raised_cosine(nfilts, nfilts, 1.0/float(sps), 0.35, 11*sps*nfilts)
 		self.gain = gain = 15
-		self.freq = freq = 520e6
+		self.freq = freq = 510e6
 		self.fine_freq = fine_freq = -28400
 
 		##################################################
@@ -107,8 +108,22 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self._fine_freq_slider.valueChanged.connect(self.set_fine_freq)
 		self._fine_freq_layout.addWidget(self._fine_freq_slider)
 		self.top_grid_layout.addLayout(self._fine_freq_layout, 2,1,1,1)
+		self.wxgui_scopesink2_0 = scopesink2.scope_sink_c(
+			self.GetWin(),
+			title="Scope Plot",
+			sample_rate=samp_rate,
+			v_scale=0,
+			v_offset=0,
+			t_scale=0,
+			ac_couple=False,
+			xy_mode=False,
+			num_inputs=1,
+			trig_mode=gr.gr_TRIG_MODE_AUTO,
+			y_axis_label="Counts",
+		)
+		self.Add(self.wxgui_scopesink2_0.win)
 		self.uhd_usrp_source_0 = uhd.usrp_source(
-			device_addr="",
+			device_addr="serial=E8R10Z2B1",
 			stream_args=uhd.stream_args(
 				cpu_format="fc32",
 				channels=range(1),
@@ -122,7 +137,7 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 			500, #size
 			samp_rate, #bw
 			"QT GUI Plot", #name
-			3 #number of inputs
+			1 #number of inputs
 		)
 		self._qtgui_time_sink_x_0_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0_0.pyqwidget(), Qt.QWidget)
 		self.top_grid_layout.addWidget(self._qtgui_time_sink_x_0_0_win, 0,0,1,1)
@@ -146,8 +161,6 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self.gr_multiply_xx_0 = gr.multiply_vcc(1)
 		self.gr_agc2_xx_0 = gr.agc2_cc(1e-1, 1e-2, 1.0, 1.0, 0.0)
 		self.digital_pfb_clock_sync_xxx_0 = digital.pfb_clock_sync_ccf(sps, 2*3.14/100.0, (rrc_taps), nfilts, nfilts/2, 1.5, 1)
-		self.digital_mpsk_snr_est_cc_0_1 = digital.mpsk_snr_est_cc(3, 10000, 0.001)
-		self.digital_mpsk_snr_est_cc_0_0 = digital.mpsk_snr_est_cc(2, 10000, 0.001)
 		self.digital_mpsk_snr_est_cc_0 = digital.mpsk_snr_est_cc(0, 10000, 0.001)
 		self.digital_lms_dd_equalizer_cc_0 = digital.lms_dd_equalizer_cc(15, 0.010, 1, digital.constellation_qpsk().base())
 		self.digital_costas_loop_cc_0 = digital.costas_loop_cc(2*3.14/100.0, 4)
@@ -167,11 +180,8 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self.connect((self.digital_costas_loop_cc_0, 0), (self.digital_lms_dd_equalizer_cc_0, 0))
 		self.connect((self.digital_costas_loop_cc_0, 0), (self.qtgui_const_sink_x_0, 0))
 		self.connect((self.uhd_usrp_source_0, 0), (self.gr_agc2_xx_0, 0))
-		self.connect((self.digital_pfb_clock_sync_xxx_0, 0), (self.digital_mpsk_snr_est_cc_0_0, 0))
-		self.connect((self.digital_pfb_clock_sync_xxx_0, 0), (self.digital_mpsk_snr_est_cc_0_1, 0))
+		self.connect((self.digital_mpsk_snr_est_cc_0, 0), (self.wxgui_scopesink2_0, 0))
 		self.connect((self.digital_mpsk_snr_est_cc_0, 0), (self.qtgui_time_sink_x_0_0, 0))
-		self.connect((self.digital_mpsk_snr_est_cc_0_0, 0), (self.qtgui_time_sink_x_0_0, 1))
-		self.connect((self.digital_mpsk_snr_est_cc_0_1, 0), (self.qtgui_time_sink_x_0_0, 2))
 
 # QT sink close method reimplementation
 	def closeEvent(self, event):
@@ -200,6 +210,7 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 		self.samp_rate = samp_rate
 		self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate)
 		self.uhd_usrp_source_0.set_samp_rate(self.samp_rate)
+		self.wxgui_scopesink2_0.set_sample_rate(self.samp_rate)
 
 	def get_rrc_taps(self):
 		return self.rrc_taps
@@ -222,9 +233,9 @@ class uhd_snr_receiver(gr.top_block, Qt.QWidget):
 
 	def set_freq(self, freq):
 		self.freq = freq
-		self.uhd_usrp_source_0.set_center_freq(self.freq + self.fine_freq, 0)
 		self._freq_counter.setValue(self.freq)
 		self._freq_slider.setValue(self.freq)
+		self.uhd_usrp_source_0.set_center_freq(self.freq + self.fine_freq, 0)
 
 	def get_fine_freq(self):
 		return self.fine_freq

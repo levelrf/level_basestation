@@ -62,10 +62,16 @@ class _queue_watcher_thread(_threading.Thread):
         self.keep_running = False
         
     def run(self):
+        acked = 0
         while self.keep_running:
             print "cc1k_level_pkt: waiting for packet"
             msg = self.rcvd_pktq.delete_head()
             payload = msg.to_string()
-            print "received packet "
+            acked += 1
+            print "received packet ", acked
             print payload.encode("hex")
-            print payload.encode("ascii")
+            try:
+                print payload.encode("ascii")
+            except UnicodeDecodeError:
+                print "unicode post"
+

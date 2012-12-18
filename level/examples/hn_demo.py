@@ -13,7 +13,7 @@ from grc_gnuradio import wxgui as grc_wxgui
 from gnuradio import level
 from math import pi
 from gruel import pmt
-import urllib2, time, json, operator, binascii, sys
+import urllib2, time, json, operator, binascii, sys, os
 import crcmod
 
 crc16_func = crcmod.mkCrcFun(0x18005, initCrc=0xFFFF, rev=False)
@@ -37,9 +37,9 @@ class test_transmit(gr.top_block):
 
         # Variables
         self.samp_rate = samp_rate = 125e3
-        self.f_center = f_center = 520e6
-        self.bandwidth = bandwidth = 200e3
-        self.gain = gain = 5
+        self.f_center = f_center = 510e6
+        self.bandwidth = bandwidth = 125e3
+        self.gain = gain = 25
 
         self.msgq = msgq = gr.msg_queue()
 
@@ -89,11 +89,12 @@ class test_transmit(gr.top_block):
         return str(title) + " : " + str(score)
 
     def form_packet(self, payload):
+        payload = chr(0xAA)*32
         length = len(payload)
         crc = crc16_func(chr(length) + payload)
         
-        #packet =  chr(0x00)                             # guard
-        packet = chr(0xAA)*4                           # preamble
+        packet =  chr(0x00)*4                           # guard
+        packet += chr(0xAA)*4                           # preamble
         packet += chr(0xD3) + chr(0x91)                 # sync
         packet += chr(length)                           # length
         packet += payload
@@ -128,7 +129,7 @@ class test_receive(gr.top_block):
         # Variables
         self.samp_rate = samp_rate = 125e3
         self.f_center = f_center = 520e6
-        self.bandwidth = bandwidth = 100e3
+        self.bandwidth = bandwidth = 125e3
         self.gain = gain = 5
 
         # Blocks
