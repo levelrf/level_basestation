@@ -40,10 +40,14 @@ class msk_rx(gr.top_block):
         self.uhd_src.set_center_freq(self.f_center, 0)
         self.uhd_src.set_gain(self.gain, 0)
 
+        self.agc = gr.agc2_cc()
+        #self.clock_sync = digital.pfb_clock_sync_ccf(sps=2,)
+        self.costas_loop = digital.costas_loop_cc(2*3.14/100.0, 4)
+
         self.packet_receiver = level.cc1k_demod_pkts(callback=rx_callback())
 
         # Connections
-        self.connect(self.uhd_src, self.packet_receiver)
+        self.connect(self.uhd_src, self.agc, (self.costas_loop,0), self.packet_receiver)
 
 if __name__ == '__main__':
     rx = msk_rx()
