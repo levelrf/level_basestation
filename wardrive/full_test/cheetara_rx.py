@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Cheetara Rx
-# Generated: Mon Dec 17 18:30:01 2012
+# Generated: Mon Dec 17 21:03:15 2012
 ##################################################
 
 from gnuradio import eng_notation
@@ -24,7 +24,7 @@ class cheetara_rx(grc_wxgui.top_block_gui):
 		##################################################
 		# Variables
 		##################################################
-		self.samp_rate = samp_rate = 32000
+		self.samp_rate = samp_rate = 125e3
 
 		##################################################
 		# Blocks
@@ -46,15 +46,14 @@ class cheetara_rx(grc_wxgui.top_block_gui):
 		)
 		self.Add(self.wxgui_fftsink2_0.win)
 		self.uhd_usrp_source_0 = uhd.usrp_source(
-			device_addr="",
+			device_addr="serial=E8R10Z2B1",
 			stream_args=uhd.stream_args(
 				cpu_format="fc32",
-				args="serial=E8R10Z2B1",
 				channels=range(1),
 			),
 		)
 		self.uhd_usrp_source_0.set_samp_rate(samp_rate)
-		self.uhd_usrp_source_0.set_center_freq(500e6, 0)
+		self.uhd_usrp_source_0.set_center_freq(520e6, 0)
 		self.uhd_usrp_source_0.set_gain(5, 0)
 		self.uhd_usrp_source_0.set_antenna("RX2", 0)
 		self.uhd_usrp_source_0.set_bandwidth(100e3, 0)

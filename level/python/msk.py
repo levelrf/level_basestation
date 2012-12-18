@@ -5,7 +5,7 @@ from math import pi
 import numpy
 
 class msk_demod_cf(gr.hier_block2):
-    def __init__(self):
+    def __init__(self, bt = 0.3, samples_per_symbol = 2, ti_adj=False):
         """
         Hierarchical block for MSK demodulation.
     
@@ -43,10 +43,13 @@ class msk_demod_cf(gr.hier_block2):
 
         self.slicer = digital.binary_slicer_fb()
 
-        self.connect(self, self.fmdemod, self.invert, self.clock_recovery, self.offset, self)
+        if ti_adj:
+            self.connect(self, self.fmdemod, self.invert, self.clock_recovery, self.offset, self)
+        else:
+            self.connect(self, self.fmdemod, self.clock_recovery, self)
 
 class msk_mod_bc(gr.hier_block2):
-    def __init__(self, bt = 0.3, samples_per_symbol = 2):
+    def __init__(self, bt = 0.3, samples_per_symbol = 2, ti_adj=False):
         gr.hier_block2.__init__(self, "msk_demod",
                 gr.io_signature(1, 1, gr.sizeof_char),
                 gr.io_signature(1, 1, gr.sizeof_gr_complex))
@@ -76,4 +79,7 @@ class msk_mod_bc(gr.hier_block2):
         self.invert = gr.multiply_const_vff((-1, ))
 
         # Connect & Initialize base class
-        self.connect(self, self.unpack, self.nrz, self.invert, self.offset, self.gaussian_filter, self.fmmod, self)
+        if ti_adj:
+            self.connect(self, self.unpack, self.nrz, self.invert, self.offset, self.gaussian_filter, self.fmmod, self)
+        else:
+            self.connect(self, self.unpack, self.nrz, self.gaussian_filter, self.fmmod, self)

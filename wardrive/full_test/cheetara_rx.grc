@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ASCII'?>
 <flow_graph>
-  <timestamp>Mon Dec 17 18:30:00 2012</timestamp>
+  <timestamp>Mon Dec 17 21:02:28 2012</timestamp>
   <block>
     <key>options</key>
     <param>
@@ -54,29 +54,6 @@
     <param>
       <key>_coordinate</key>
       <value>(10, 10)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>id</key>
-      <value>samp_rate</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>32000</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(10, 170)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -175,6 +152,29 @@
     </param>
   </block>
   <block>
+    <key>variable</key>
+    <param>
+      <key>id</key>
+      <value>samp_rate</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>125e3</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(10, 170)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
     <key>uhd_usrp_source</key>
     <param>
       <key>id</key>
@@ -194,11 +194,11 @@
     </param>
     <param>
       <key>stream_args</key>
-      <value>serial=E8R10Z2B1</value>
+      <value></value>
     </param>
     <param>
       <key>dev_addr</key>
-      <value></value>
+      <value>serial=E8R10Z2B1</value>
     </param>
     <param>
       <key>sync</key>
@@ -318,7 +318,7 @@
     </param>
     <param>
       <key>center_freq0</key>
-      <value>500e6</value>
+      <value>520e6</value>
     </param>
     <param>
       <key>gain0</key>

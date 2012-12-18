@@ -17,19 +17,19 @@ class msk_rx(gr.top_block):
 
         # Variables
         self.samp_rate = samp_rate = 125e3
-        self.f_center = f_center = 868e6
+        self.f_center = f_center = 520e6
         self.bandwidth = bandwidth = 200e3
         self.gain = gain = 5
 
         # Blocks
         self.uhd_src = uhd.usrp_source(
-            device_addr="",
+            device_addr="serial=E8R10Z2B1", #cheetara
             stream_args=uhd.stream_args(
                 cpu_format="fc32",
                 channels=range(1),
             ),
         )
-        self.uhd_src.set_subdev_spec("A:0", 0)
+        #self.uhd_src.set_subdev_spec("A:0", 0)
         self.uhd_src.set_samp_rate(samp_rate)
         self.uhd_src.set_center_freq(f_center, 0)
         self.uhd_src.set_gain(gain, 0)

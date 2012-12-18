@@ -37,7 +37,7 @@ class test_transmit(gr.top_block):
 
         # Variables
         self.samp_rate = samp_rate = 125e3
-        self.f_center = f_center = 500e6
+        self.f_center = f_center = 520e6
         self.bandwidth = bandwidth = 200e3
         self.gain = gain = 5
 
@@ -45,9 +45,9 @@ class test_transmit(gr.top_block):
 
         # Blocks
         self.uhd_sink = uhd.usrp_sink(
-            device_addr="",
+            device_addr="serial=E4R11Y0B1", #panthro
             stream_args=uhd.stream_args(
-                args="serial=E4R11Y0B1", #panthro
+                args="",
                 cpu_format="fc32",
                 channels=range(1),
                 antenna="TX/RX"
@@ -62,7 +62,8 @@ class test_transmit(gr.top_block):
 
         self.msk = level.msk_mod_bc(
             samples_per_symbol=2,
-            bt=0.3
+            bt=0.3,
+            ti_adj=False
         )
         
         self.connect(self.msg_src, self.msk, self.uhd_sink)
@@ -91,8 +92,8 @@ class test_transmit(gr.top_block):
         length = len(payload)
         crc = crc16_func(chr(length) + payload)
         
-        packet =  chr(0x00)                             # guard
-        packet += chr(0xAA)*4                           # preamble
+        #packet =  chr(0x00)                             # guard
+        packet = chr(0xAA)*4                           # preamble
         packet += chr(0xD3) + chr(0x91)                 # sync
         packet += chr(length)                           # length
         packet += payload
@@ -126,7 +127,7 @@ class test_receive(gr.top_block):
 
         # Variables
         self.samp_rate = samp_rate = 125e3
-        self.f_center = f_center = 550e6
+        self.f_center = f_center = 520e6
         self.bandwidth = bandwidth = 100e3
         self.gain = gain = 5
 
@@ -156,8 +157,8 @@ class test_receive(gr.top_block):
 
 if __name__ == '__main__':
     tx = test_transmit()
-    rx = test_receive()
-    rx.start()
+    #rx = test_receive()
+    #rx.start()
     #r = gr.enable_realtime_scheduling()
     tx.start()
     tx.main_loop(float("inf"))

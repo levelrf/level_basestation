@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Cheetara Tx
-# Generated: Mon Dec 17 18:26:57 2012
+# Generated: Mon Dec 17 21:02:50 2012
 ##################################################
 
 from gnuradio import eng_notation
@@ -26,10 +26,9 @@ class cheetara_tx(gr.top_block):
 		# Blocks
 		##################################################
 		self.uhd_usrp_sink_0 = uhd.usrp_sink(
-			device_addr="",
+			device_addr="serial=E8R10Z2B1",
 			stream_args=uhd.stream_args(
 				cpu_format="fc32",
-				args="serial=E8R10Z2B1",
 				channels=range(1),
 			),
 		)

@@ -2,7 +2,7 @@
 ##################################################
 # Gnuradio Python Flow Graph
 # Title: Panthro Tx
-# Generated: Mon Dec 17 18:29:37 2012
+# Generated: Mon Dec 17 21:03:11 2012
 ##################################################
 
 from gnuradio import eng_notation
@@ -26,10 +26,9 @@ class panthro_tx(gr.top_block):
 		# Blocks
 		##################################################
 		self.uhd_usrp_sink_0 = uhd.usrp_sink(
-			device_addr="",
+			device_addr="serial=E4R11Y0B1",
 			stream_args=uhd.stream_args(
 				cpu_format="fc32",
-				args="addr=E4R11Y0B1",
 				channels=range(1),
 			),
 		)

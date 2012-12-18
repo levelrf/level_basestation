@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ASCII'?>
 <flow_graph>
-  <timestamp>Mon Dec 17 19:24:29 2012</timestamp>
+  <timestamp>Mon Dec 17 21:03:03 2012</timestamp>
   <block>
     <key>options</key>
     <param>
@@ -194,11 +194,11 @@
     </param>
     <param>
       <key>stream_args</key>
-      <value>addr=E4R11Y0B1</value>
+      <value></value>
     </param>
     <param>
       <key>dev_addr</key>
-      <value></value>
+      <value>serial=E4R11Y0B1</value>
     </param>
     <param>
       <key>sync</key>

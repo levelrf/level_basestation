@@ -14,7 +14,7 @@
 #include <cstring>
 #include <gr_count_bits.h>
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 // just for debug printing
 char tmp[FMT_BUF_SIZE];
@@ -117,7 +117,7 @@ level_packet_sink::work (int noutput_items,
             d_preamble_reg = d_preamble_reg << 1;
 
           if(gr_count_bits64(d_preamble_reg ^ d_preamble) <= d_threshold) {
-            //if (VERBOSE)
+            //if (VERBOSE){
             //  fprintf(stderr,"FOUND PREAMBLE, incorrect bits: %d\n", err), fflush(stderr);
             enter_sync_search();
             break;
@@ -142,11 +142,18 @@ level_packet_sink::work (int noutput_items,
           // Compute incorrect bits of alleged sync vector
           if(gr_count_bits64(d_sync_reg ^ d_sync) <= d_threshold) {
             // Found it, set up for packet decode
-            if (VERBOSE)
-              fprintf(stderr,"FOUND SYNC, detected=%s\n", binary_fmt(d_sync_reg, tmp)), fflush(stderr);
+            //if (VERBOSE)
+            //  fprintf(stderr,"FOUND SYNC, detected=%s\n", binary_fmt(d_sync_reg, tmp)), fflush(stderr);
             enter_midamble();
             break;
           }else if(d_sync_len_index > 16){
+            if(gr_count_bits64(d_sync_reg ^ d_sync) == 10){
+              if(VERBOSE)
+                fprintf(stderr, "manual shift, incorrect=10"), fflush(stderr);
+              count += 2;
+              enter_midamble();
+              break;
+            }
             // wrong sync word after preamble
             if (VERBOSE)
               fprintf(stderr,"WRONG SYNC, detected=%s incorrect=%d\n", binary_fmt(d_sync_reg, tmp), gr_count_bits64(d_sync_reg ^ d_sync)), fflush(stderr);
