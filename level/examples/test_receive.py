@@ -72,9 +72,9 @@ if __name__ == '__main__':
     rx.stop()
     sink_data = list(rx.vec_sink.data())
     print sum(sink_data) / float(len(sink_data))
-    bin_data = list(rx.bin_sink.data())
-    f = open("rx.dat", "w")
-    for index, bit in enumerate(bin_data):
-        f.write(str(bit))
-        if index % 16 == 0:
-            f.write('\n')
+    #bin_data = list(rx.bin_sink.data())
+    #f = open("rx.dat", "w")
+    #for index, bit in enumerate(bin_data):
+    #    f.write(str(bit))
+    #    if index % 16 == 0:
+    #        f.write('\n')
