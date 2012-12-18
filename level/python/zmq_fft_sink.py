@@ -19,9 +19,6 @@ class zmq_fft_sink_c(gr.hier_block2):
 		fft_rate = 20,
 		average = False,
 		avg_alpha = None,
-		title = '',
-		size = (600, 300),
-		peak_hold = False,
 		win = None,
 		use_persistence = False,
 		persist_alpha = None,
@@ -61,16 +58,6 @@ class zmq_fft_sink_c(gr.hier_block2):
 
 		msgq = gr.msg_queue(2)
 		sink = gr.message_sink(gr.sizeof_float*fft_size, msgq, True)
-
-		#controller
-		#self.controller = pubsub()
-		#self.controller.subscribe(AVERAGE_KEY, fft_0.set_average)
-		#self.controller.publish(AVERAGE_KEY, fft_0.average)
-		#self.controller.subscribe(AVG_ALPHA_KEY, fft_0.set_avg_alpha)
-		#self.controller.publish(AVG_ALPHA_KEY, fft_0.avg_alpha)
-		#self.controller.subscribe(SAMPLE_RATE_KEY, fft_0.set_sample_rate)
-		#self.controller.publish(SAMPLE_RATE_KEY, fft_0.sample_rate)
-		#start input watcher
 		input_watcher(msgq)
 
 		#connect
@@ -92,14 +79,20 @@ class input_watcher(gru.msgq_runner):
 	def handle_msg(self, msg):
 		self.count += 1
 		#convert to floating point numbers
-		print "test0"
 		try:
-			samples = numpy.fromstring(msg, numpy.float32)[:512] #only take first frame
+			samples = numpy.fromstring(msg.to_string(), numpy.float32)[:512] #only take first frame
+			num_samps = len(samples)
+			#reorder FFT so negative bins come first
+			samples = numpy.concatenate((samples[num_samps/2+1:], samples[:(num_samps+1)/2]))
+			#make positive ints for client ease of use
+			samples += 45
+			samples *= 2
+			#convert from GR float to python float
+			samples = map(int, samples)
+			js = json.dumps({ 'fft': samples })
+			self.publisher.send(js)
 		except:
 			print sys.exc_info()
-		arr = map(ord, msg.to_string())
-		js = json.dumps({ 'fft': arr })
-		self.publisher.send(js)
 		#print "sent message", self.count
 
 
@@ -133,9 +126,9 @@ class test_app_block(gr.top_block):
                             ref_level=0, y_per_div=20, y_divs=10)
 
         combine1 = gr.add_cc()
-        #self.connect(src1, (combine1, 0))
-        #self.connect(noise,(combine1, 1))
-        self.connect(src1, thr1, test_fft)
+        self.connect(src1, (combine1, 0))
+        self.connect(noise,(combine1, 1))
+        self.connect(combine1, thr1, test_fft)
 
 def main ():
     app = test_app_block()
